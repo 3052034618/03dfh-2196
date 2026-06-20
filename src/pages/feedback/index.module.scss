@@ -1,0 +1,270 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(123, 92, 255, 0.08) 0%, $color-bg-page 30%);
+}
+
+.header {
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.subTitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-sm;
+  padding: 0 $page-padding $spacing-md;
+}
+
+.statCard {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+  text-align: center;
+}
+
+.statCardUrgent {
+  background: linear-gradient(135deg, rgba(245, 63, 63, 0.1) 0%, rgba(245, 63, 63, 0.05) 100%);
+}
+
+.statCardSuggest {
+  background: linear-gradient(135deg, rgba(255, 125, 0, 0.1) 0%, rgba(255, 125, 0, 0.05) 100%);
+}
+
+.statCardReference {
+  background: linear-gradient(135deg, rgba(134, 144, 156, 0.1) 0%, rgba(134, 144, 156, 0.05) 100%);
+}
+
+.statNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  display: block;
+}
+
+.statNumUrgent { color: $color-urgent; }
+.statNumSuggest { color: $color-suggest; }
+.statNumReference { color: $color-reference; }
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.levelTabs {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  margin: 0 $page-padding $spacing-lg;
+  padding: 8rpx;
+  box-shadow: $shadow-card;
+}
+
+.levelTab {
+  flex: 1;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.levelTabAll {
+  &.levelTabActive {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+  }
+}
+
+.levelTabUrgent {
+  &.levelTabActive {
+    background: $color-urgent;
+    color: $color-text-white;
+  }
+}
+
+.levelTabSuggest {
+  &.levelTabActive {
+    background: $color-suggest;
+    color: $color-text-white;
+  }
+}
+
+.levelTabReference {
+  &.levelTabActive {
+    background: $color-reference;
+    color: $color-text-white;
+  }
+}
+
+.levelTabActive {
+  font-weight: $font-weight-semibold;
+  box-shadow: $shadow-float;
+}
+
+.levelTabBadge {
+  font-size: 20rpx;
+  padding: 2rpx 10rpx;
+  border-radius: $radius-round;
+  margin-left: 8rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.commentList {
+  padding: 0 $page-padding $spacing-xl;
+}
+
+.emptyState {
+  padding: 160rpx $page-padding;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.chatModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatHeader {
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: $shadow-card;
+}
+
+.chatBack {
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  padding: $spacing-xs $spacing-sm;
+  margin-left: -$spacing-sm;
+}
+
+.chatTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  text-align: center;
+  margin-right: 60rpx;
+}
+
+.chatContent {
+  flex: 1;
+  padding: $spacing-lg $page-padding;
+  overflow-y: auto;
+}
+
+.originalComment {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.originalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.originalLevel {
+  font-size: $font-size-xs;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-medium;
+}
+
+.originalPage {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.originalText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-loose;
+}
+
+.chatMessages {
+  flex: 1;
+}
+
+.chatInputArea {
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.chatInput {
+  flex: 1;
+  height: 72rpx;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.chatSendBtn {
+  @include button-reset;
+  height: 72rpx;
+  padding: 0 $spacing-xl;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  border-radius: $radius-button;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}

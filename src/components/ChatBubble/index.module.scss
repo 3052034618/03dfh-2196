@@ -1,0 +1,80 @@
+@use '@/styles/variables.scss' as *;
+
+.wrapper {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: $spacing-lg;
+  gap: $spacing-sm;
+}
+
+.mine {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  flex-shrink: 0;
+}
+
+.avatarMine {
+  background: linear-gradient(135deg, $color-secondary 0%, $color-secondary-light 100%);
+}
+
+.contentWrapper {
+  max-width: 500rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.mine .contentWrapper {
+  align-items: flex-end;
+}
+
+.senderName {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  padding-left: $spacing-xs;
+}
+
+.bubble {
+  background: $color-bg-card;
+  padding: $spacing-md $spacing-lg;
+  border-radius: $radius-lg;
+  border-top-left-radius: $radius-xs;
+  box-shadow: $shadow-card;
+  max-width: 500rpx;
+}
+
+.bubbleMine {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-top-left-radius: $radius-lg;
+  border-top-right-radius: $radius-xs;
+
+  .text {
+    color: $color-text-white;
+  }
+}
+
+.text {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
+  word-break: break-all;
+}
+
+.time {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  padding: 0 $spacing-xs;
+}

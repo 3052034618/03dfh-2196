@@ -1,0 +1,319 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 24rpx $page-padding;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.taskInfo {
+  color: #fff;
+}
+
+.taskTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+  max-width: 400rpx;
+}
+
+.taskMeta {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pageIndicator {
+  color: #fff;
+  font-size: $font-size-sm;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8rpx 20rpx;
+  border-radius: $radius-button;
+}
+
+.readerContainer {
+  flex: 1;
+  background: #000;
+}
+
+.panelSwiper {
+  width: 100%;
+  height: 100vh;
+}
+
+.panelItem {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.panelImage {
+  width: 100%;
+  height: auto;
+  max-height: 100vh;
+}
+
+.commentPanel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: $color-bg-card;
+  border-radius: $radius-xl $radius-xl 0 0;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+  transition: transform $transition-base;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.panelTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.panelClose {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.levelSelector {
+  display: flex;
+  padding: $spacing-md $spacing-lg;
+  gap: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.levelBtn {
+  flex: 1;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+}
+
+.levelActive {
+  &.levelUrgent {
+    background: rgba(245, 63, 63, 0.1);
+    color: $color-urgent;
+  }
+  &.levelSuggest {
+    background: rgba(255, 125, 0, 0.1);
+    color: $color-suggest;
+  }
+  &.levelReference {
+    background: rgba(134, 144, 156, 0.1);
+    color: $color-reference;
+  }
+}
+
+.inputArea {
+  padding: $spacing-md $spacing-lg;
+}
+
+.inputRow {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.textInput {
+  flex: 1;
+  height: 80rpx;
+  background: $color-bg-page;
+  border-radius: $radius-button;
+  padding: 0 $spacing-lg;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.voiceBtn {
+  @include button-reset;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.voiceBtnActive {
+  background: linear-gradient(135deg, $color-secondary 0%, $color-secondary-light 100%);
+}
+
+.voiceIcon {
+  font-size: 36rpx;
+  color: #fff;
+}
+
+.recordingTip {
+  padding: $spacing-sm $spacing-lg;
+  color: $color-error;
+  font-size: $font-size-xs;
+  text-align: center;
+}
+
+.templateSection {
+  max-height: 400rpx;
+  overflow: hidden;
+}
+
+.submitRow {
+  padding: $spacing-md $spacing-lg $spacing-xl;
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.cancelBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  border-radius: $radius-button;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.submitBtn {
+  @include button-reset;
+  flex: 2;
+  height: $button-height-md;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  border-radius: $radius-button;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 4rpx 16rpx rgba(123, 92, 255, 0.3);
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.commentBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background: $color-bg-card;
+  color: $color-primary;
+  font-size: $font-size-md;
+  border-radius: $radius-button;
+  font-weight: $font-weight-semibold;
+  box-shadow: $shadow-float;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.finishBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  border-radius: $radius-button;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 4rpx 20rpx rgba(123, 92, 255, 0.4);
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.taskSelector {
+  padding: $spacing-lg $page-padding;
+  background: linear-gradient(180deg, rgba(123, 92, 255, 0.08) 0%, $color-bg-page 100%);
+}
+
+.selectorTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.emptyState {
+  padding: 200rpx $page-padding;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: $color-bg-page;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  text-align: center;
+}
+
+.emptyDesc {
+  font-size: $font-size-sm;
+  color: $color-text-disabled;
+  margin-top: $spacing-xs;
+  text-align: center;
+}
