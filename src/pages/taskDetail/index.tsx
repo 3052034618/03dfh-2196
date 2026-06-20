@@ -3,18 +3,19 @@ import { View, Text, Image, Button } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
-import { mockTasks, mockComments } from '@/data/mock';
-import type { Task, Comment } from '@/types';
+import { useAppStore } from '@/store';
 import { STATUS_TEXT, formatDate, getFocusLabel, formatDateTime, LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
 
 const TaskDetailPage: React.FC = () => {
   const router = useRouter();
   const taskId = router.params.id;
 
-  const task = useMemo(() => mockTasks.find(t => t.id === taskId), [taskId]);
+  const tasks = useAppStore(s => s.tasks);
+  const comments = useAppStore(s => s.comments);
+  const takeTask = useAppStore(s => s.takeTask);
 
-  const taskComments = useMemo(() =>
-    mockComments.filter(c => c.taskId === taskId), [taskId]);
+  const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId]);
+  const taskComments = useMemo(() => comments.filter(c => c.taskId === taskId), [comments, taskId]);
 
   if (!task) {
     return (
@@ -46,6 +47,7 @@ const TaskDetailPage: React.FC = () => {
       confirmColor: '#7B5CFF',
       success: (res) => {
         if (res.confirm) {
+          takeTask(taskId);
           Taro.showToast({
             title: '接单成功',
             icon: 'success'

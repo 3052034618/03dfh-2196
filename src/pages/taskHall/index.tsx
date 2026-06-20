@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, Button, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import TaskCard from '@/components/TaskCard';
-import { mockTasks } from '@/data/mock';
-import type { Task, TaskStatus } from '@/types';
+import { useAppStore } from '@/store';
+import type { TaskStatus } from '@/types';
 
 type TabType = 'all' | TaskStatus;
 
@@ -17,7 +17,8 @@ const TABS: { key: TabType; label: string }[] = [
 ];
 
 const TaskHallPage: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const tasks = useAppStore(s => s.tasks);
+  const takeTask = useAppStore(s => s.takeTask);
   const [activeTab, setActiveTab] = useState<TabType>('all');
 
   const filteredTasks = useMemo(() => {
@@ -40,11 +41,7 @@ const TaskHallPage: React.FC = () => {
       confirmColor: '#7B5CFF',
       success: (res) => {
         if (res.confirm) {
-          setTasks(prev => prev.map(t =>
-            t.id === taskId
-              ? { ...t, status: 'inProgress' as TaskStatus, reviewerName: '我' }
-              : t
-          ));
+          takeTask(taskId);
           Taro.showToast({
             title: '接单成功',
             icon: 'success'

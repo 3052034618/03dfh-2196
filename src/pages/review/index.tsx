@@ -1,23 +1,38 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, Input, Swiper, SwiperItem, Image, Button, ScrollView } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import TaskCard from '@/components/TaskCard';
 import CommentTemplate from '@/components/CommentTemplate';
-import { mockTasks, mockTemplates, mockComments } from '@/data/mock';
+import { useAppStore } from '@/store';
+import { mockTemplates } from '@/data/mock';
 import type { Task, FeedbackLevel, Comment } from '@/types';
-import { LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
+import { LEVEL_TEXT, getFocusLabel } from '@/utils';
+
+const SIMULATED_VOICE_TEXTS = [
+  '这页的分镜节奏不错，视觉引导很清晰，读者能自然地跟随画面阅读',
+  '这一格的构图稍显拥挤，角色表情和背景元素有点冲突，建议适当留白',
+  '翻页到这里情绪转折很自然，但下一页的衔接稍显突兀，可以加一格过渡',
+  '打斗动作的连贯性很好，冲击力十足，但最后一击的定格格可以再大一些',
+  '对话气泡位置不太理想，遮住了角色关键表情，建议调整到画面空白区域',
+  '包袱抖得不错，前后的节奏感很好，读者应该能在这个位置笑出来',
+  '这一页竖屏翻页体验还行，但中缝位置刚好切在了角色脸上，需要注意',
+  '整体画面质量很高，色彩和线条都很精致，继续保持这个水准'
+];
 
 const ReviewPage: React.FC = () => {
-  const inProgressTasks = useMemo(() => mockTasks.filter(t => t.status === 'inProgress'), []);
+  const tasks = useAppStore(s => s.tasks);
+  const addComment = useAppStore(s => s.addComment);
+  const comments = useAppStore(s => s.comments);
+
+  const inProgressTasks = useMemo(() => tasks.filter(t => t.status === 'inProgress'), [tasks]);
   const [currentTask, setCurrentTask] = useState<Task | null>(inProgressTasks[0] || null);
   const [currentPage, setCurrentPage] = useState(0);
   const [showPanel, setShowPanel] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<FeedbackLevel>('suggest');
   const [isRecording, setIsRecording] = useState(false);
-  const [submittedComments, setSubmittedComments] = useState<Comment[]>(mockComments);
 
   const handleSelectTask = (task: Task) => {
     setCurrentTask(task);
@@ -33,6 +48,7 @@ const ReviewPage: React.FC = () => {
     setShowPanel(true);
     setCommentText('');
     setSelectedLevel('suggest');
+    setIsRecording(false);
   };
 
   const handleClosePanel = () => {
@@ -48,9 +64,14 @@ const ReviewPage: React.FC = () => {
   const handleVoiceToggle = () => {
     if (isRecording) {
       setIsRecording(false);
-      setCommentText(prev => prev + '（语音识别完成的评论内容会出现在这里）');
+      const idx = Math.floor(Math.random() * SIMULATED_VOICE_TEXTS.length);
+      const simulated = SIMULATED_VOICE_TEXTS[idx];
+      setCommentText(prev => {
+        if (prev.trim()) return prev + '，' + simulated;
+        return simulated;
+      });
       Taro.showToast({
-        title: '语音转文字完成',
+        title: '语音识别完成',
         icon: 'success'
       });
       console.log('[Review] 语音转文字完成');
@@ -66,7 +87,8 @@ const ReviewPage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (!commentText.trim()) {
+    const trimmedText = commentText.trim();
+    if (!trimmedText) {
       Taro.showToast({
         title: '请输入评论内容',
         icon: 'none'
@@ -78,14 +100,14 @@ const ReviewPage: React.FC = () => {
       id: `comment-${Date.now()}`,
       taskId: currentTask?.id || '',
       pageIndex: currentPage + 1,
-      content: commentText,
+      content: trimmedText,
       level: selectedLevel,
       reviewerName: '我',
       createdAt: new Date().toISOString(),
       isRead: true
     };
 
-    setSubmittedComments(prev => [...prev, newComment]);
+    addComment(newComment);
     setShowPanel(false);
     setCommentText('');
     setIsRecording(false);
@@ -94,14 +116,14 @@ const ReviewPage: React.FC = () => {
       title: '评论已提交',
       icon: 'success'
     });
-    console.log('[Review] 提交评论', newComment);
+    console.log('[Review] 提交评论', newComment.id);
   };
 
   const handleFinish = () => {
-    const taskComments = submittedComments.filter(c => c.taskId === currentTask?.id);
+    const taskCommentsCount = comments.filter(c => c.taskId === currentTask?.id).length;
     Taro.showModal({
       title: '确认完成审稿',
-      content: `您已提交 ${taskComments.length} 条评论，确认完成本次审稿？`,
+      content: `您已提交 ${taskCommentsCount} 条评论，确认完成本次审稿？`,
       confirmText: '确认完成',
       confirmColor: '#7B5CFF',
       success: (res) => {
@@ -127,7 +149,7 @@ const ReviewPage: React.FC = () => {
   }
 
   const totalPages = currentTask.panelImages.length;
-  const taskCommentsCount = submittedComments.filter(c => c.taskId === currentTask.id).length;
+  const taskCommentsCount = comments.filter(c => c.taskId === currentTask.id).length;
 
   return (
     <View className={styles.page}>

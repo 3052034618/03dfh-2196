@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import styles from './index.module.scss';
 import FeedbackItem from '@/components/FeedbackItem';
 import ChatBubble from '@/components/ChatBubble';
-import { mockComments, mockTasks, mockChatMessages } from '@/data/mock';
+import { useAppStore } from '@/store';
 import type { Comment, FeedbackLevel, ChatMessage } from '@/types';
 import { LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
 
@@ -18,12 +18,24 @@ const LEVEL_TABS: { key: FilterType; label: string; styleKey: string }[] = [
   { key: 'reference', label: '仅供参考', styleKey: 'Reference' }
 ];
 
+const SIMULATED_REPLIES = [
+  '好的，我收到你的问题了，让我再仔细看一下这一页~',
+  '确实，这个地方我也考虑到了，主要是担心调整后影响整体节奏',
+  '你说得对，我再想想有没有更好的处理方式',
+  '没问题，这个建议很实用，我会在修改时注意的',
+  '了解，我重新审视一下这个分镜的布局，看看能否优化'
+];
+
 const FeedbackPage: React.FC = () => {
-  const [comments, setComments] = useState<Comment[]>(mockComments);
+  const comments = useAppStore(s => s.comments);
+  const tasks = useAppStore(s => s.tasks);
+  const chatMessages = useAppStore(s => s.chatMessages);
+  const addChatMessage = useAppStore(s => s.addChatMessage);
+  const getTaskById = useAppStore(s => s.getTaskById);
+
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [showChat, setShowChat] = useState(false);
   const [activeComment, setActiveComment] = useState<Comment | null>(null);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(mockChatMessages);
   const [inputText, setInputText] = useState('');
 
   const urgentCount = comments.filter(c => c.level === 'urgent' && !c.isRead).length;
@@ -37,8 +49,6 @@ const FeedbackPage: React.FC = () => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [comments, activeFilter]);
-
-  const getTaskById = (taskId: string) => mockTasks.find(t => t.id === taskId);
 
   const handleAsk = (commentId: string) => {
     const comment = comments.find(c => c.id === commentId);
@@ -62,29 +72,31 @@ const FeedbackPage: React.FC = () => {
       commentId: activeComment.id,
       senderName: '我',
       senderRole: 'author',
-      content: inputText,
+      content: inputText.trim(),
       createdAt: new Date().toISOString()
     };
 
-    setChatMessages(prev => [...prev, newMsg]);
+    addChatMessage(newMsg);
     setInputText('');
     Taro.showToast({
       title: '发送成功',
       icon: 'success'
     });
-    console.log('[Feedback] 发送追问消息', newMsg);
+    console.log('[Feedback] 发送追问消息', newMsg.id);
 
+    const replyIdx = Math.floor(Math.random() * SIMULATED_REPLIES.length);
+    const replyContent = SIMULATED_REPLIES[replyIdx];
     setTimeout(() => {
       const replyMsg: ChatMessage = {
         id: `msg-${Date.now()}-reply`,
         commentId: activeComment.id,
         senderName: activeComment.reviewerName,
         senderRole: 'reviewer',
-        content: '好的，我收到你的问题了，稍后会详细回复~',
+        content: replyContent,
         createdAt: new Date().toISOString()
       };
-      setChatMessages(prev => [...prev, replyMsg]);
-      console.log('[Feedback] 收到顾问回复', replyMsg);
+      addChatMessage(replyMsg);
+      console.log('[Feedback] 收到顾问回复', replyMsg.id);
     }, 1500);
   };
 
