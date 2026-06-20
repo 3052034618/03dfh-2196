@@ -6,8 +6,9 @@ import styles from './index.module.scss';
 import FeedbackItem from '@/components/FeedbackItem';
 import ChatBubble from '@/components/ChatBubble';
 import { useAppStore } from '@/store';
-import type { Comment, FeedbackLevel, ChatMessage, Task, CommentStatus } from '@/types';
+import type { Comment, FeedbackLevel, ChatMessage, Task, CommentStatus, StatusFilterType } from '@/types';
 import { LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
+import { STATUS_FILTER_TABS } from '@/types';
 
 type FilterType = 'all' | FeedbackLevel;
 
@@ -49,6 +50,7 @@ const FeedbackPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'group' | 'detail'>('group');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
   const [showChat, setShowChat] = useState(false);
   const [activeComment, setActiveComment] = useState<Comment | null>(null);
   const [inputText, setInputText] = useState('');
@@ -93,11 +95,12 @@ const FeedbackPage: React.FC = () => {
     if (!selectedTask) return [];
     const taskComments = comments.filter(c => c.taskId === selectedTask.id);
     let list = activeFilter === 'all' ? taskComments : taskComments.filter(c => c.level === activeFilter);
+    list = statusFilter === 'all' ? list : list.filter(c => c.status === statusFilter);
     return list.sort((a, b) => {
       if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [selectedTask, comments, activeFilter]);
+  }, [selectedTask, comments, activeFilter, statusFilter]);
 
   const currentTaskSummary = useMemo(() => {
     if (!selectedTask) return { urgent: 0, suggest: 0, reference: 0 };
@@ -337,6 +340,25 @@ const FeedbackPage: React.FC = () => {
           );
         })}
       </View>
+
+      <ScrollView scrollX className={styles.statusScrollTab}>
+        <View className={styles.statusTabs}>
+          {STATUS_FILTER_TABS.map(tab => {
+            const isActive = statusFilter === tab.key;
+            return (
+              <View
+                key={tab.key}
+                className={classnames(styles.statusTab, {
+                  [styles.statusTabActive]: isActive
+                })}
+                onClick={() => setStatusFilter(tab.key)}
+              >
+                {tab.label}
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
 
       <ScrollView
         scrollY

@@ -89,7 +89,7 @@ const TaskHallPage: React.FC = () => {
 
   const getProgress = (task: Task) => {
     const readCount = task.progress?.readPages?.length || 0;
-    const total = task.panelImages.length;
+    const total = task.pageCount;
     return total > 0 ? Math.round((readCount / total) * 100) : 0;
   };
 
@@ -217,7 +217,7 @@ const TaskHallPage: React.FC = () => {
                         <View className={styles.progressText}>
                           <Text>审稿进度</Text>
                           <Text>
-                            {task.progress?.readPages?.length || 0}/{task.panelImages.length}页 · {progress}%
+                            {task.progress?.readPages?.length || 0}/{task.pageCount}页 · {progress}%
                           </Text>
                         </View>
                       </View>

@@ -132,6 +132,37 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+.statusScrollTab {
+  width: 100%;
+  margin: $spacing-sm 0;
+  white-space: nowrap;
+}
+
+.statusTabs {
+  display: inline-flex;
+  gap: $spacing-xs;
+  padding: 0 $page-padding;
+}
+
+.statusTab {
+  flex: 0 0 auto;
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-page;
+  border: 2rpx solid $color-border;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+  white-space: nowrap;
+}
+
+.statusTabActive {
+  background: rgba(123, 92, 255, 0.08);
+  border-color: $color-primary;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
 .commentList {
   padding: 0 $page-padding $spacing-xl;
 }

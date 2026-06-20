@@ -585,3 +585,213 @@
   background: rgba(123, 92, 255, 0.1);
   font-weight: $font-weight-medium;
 }
+
+.versionTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.versionTab {
+  flex: 0 0 auto;
+  background: $color-bg-page;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  transition: all $transition-base;
+}
+
+.versionTabActive {
+  border-color: $color-primary;
+  background: rgba(123, 92, 255, 0.08);
+  box-shadow: 0 2rpx 12rpx rgba(123, 92, 255, 0.1);
+}
+
+.versionNum {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.versionTabActive .versionNum {
+  color: $color-primary;
+}
+
+.versionDate {
+  display: block;
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.deliveryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: $spacing-md;
+  background: rgba(123, 92, 255, 0.06);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.deliveryTitle {
+  display: block;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.deliverySubtitle {
+  display: block;
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  margin-top: 6rpx;
+}
+
+.deliveryCoverage {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  background: rgba(123, 92, 255, 0.1);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+}
+
+.missedTag {
+  background: rgba(245, 63, 63, 0.1);
+  color: #F53F3F;
+  font-size: $font-size-xs;
+  padding: 8rpx 16rpx;
+  border-radius: $radius-sm;
+  margin-right: $spacing-xs;
+  margin-bottom: $spacing-xs;
+}
+
+.reworkProgressBar {
+  height: 12rpx;
+  background: $color-bg-page;
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin-bottom: $spacing-sm;
+}
+
+.reworkProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, #9CB0FF 100%);
+  transition: width 0.3s ease;
+  border-radius: $radius-round;
+}
+
+.reworkProgressLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.reworkProgressLabel {
+  font-size: 22rpx;
+  color: $color-text-secondary;
+}
+
+.reworkList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+}
+
+.reworkItem {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border: 1rpx solid $color-border-light;
+}
+
+.reworkItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx dashed $color-border;
+}
+
+.reworkPageInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.reworkThumb {
+  width: 120rpx;
+  height: 160rpx;
+  border-radius: $radius-sm;
+  object-fit: cover;
+  display: block;
+}
+
+.reworkPageNum {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.reworkCount {
+  display: block;
+  font-size: 22rpx;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.reworkStatusBadges {
+  display: flex;
+  gap: $spacing-xs;
+}
+
+.reworkBadge {
+  font-size: 20rpx;
+  font-weight: $font-weight-semibold;
+  padding: 6rpx 12rpx;
+  border-radius: $radius-round;
+  min-width: 52rpx;
+  text-align: center;
+}
+
+.reworkBadgePending {
+  background: rgba(255, 125, 0, 0.1);
+  color: #FF7D00;
+}
+
+.reworkBadgeAccepted {
+  background: rgba(0, 180, 42, 0.1);
+  color: #00B42A;
+}
+
+.reworkBadgeRejected {
+  background: rgba(134, 144, 156, 0.1);
+  color: #86909C;
+}
+
+.reworkComments {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.reworkComment {
+  padding: $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-sm;
+}
+
+.reworkCommentHeader {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-xs;
+}

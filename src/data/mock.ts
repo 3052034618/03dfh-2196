@@ -91,6 +91,27 @@ export const mockTasks: Task[] = [
       completedAt: new Date(now - 1 * dayMs).toISOString(),
       lastViewedPage: 19
     },
+    deliveries: [
+      {
+        id: 'dlv-mock-001',
+        taskId: 'task-004',
+        version: 1,
+        summary: {
+          mainIssues: ['第8页转场突兀，读者可能跟不上节奏', '第15页对话气泡遮挡表情', '整体笑点密度可以再提高'],
+          priorityPages: [7, 8, 15],
+          overallAdvice: '整体节奏不错，武侠氛围很到位。建议在第7-8页之间加一格过渡画面，第15页调整气泡位置。另外可以考虑在前几话增加更多人物立绘展示，帮助读者快速认识角色。',
+          coverageRatio: 0.85,
+          focusCoverage: ['搞笑笑点', '剧情节奏'],
+          focusMissed: [],
+          pagesWithoutComments: [4, 9, 12]
+        },
+        commentIds: ['comment-004', 'comment-005', 'comment-006', 'comment-007', 'comment-008'],
+        commentCount: 5,
+        pageCount: 20,
+        readPageCount: 20,
+        deliveredAt: new Date(now - 1 * dayMs).toISOString()
+      }
+    ],
     reviewSummary: {
       mainIssues: ['第8页转场突兀，读者可能跟不上节奏', '第15页对话气泡遮挡表情', '整体笑点密度可以再提高'],
       priorityPages: [7, 8, 15],
@@ -181,7 +202,8 @@ export const mockComments: Comment[] = [
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs).toISOString(),
     isRead: true,
-    status: 'accepted'
+    status: 'accepted',
+    deliveryId: 'dlv-mock-001'
   },
   {
     id: 'comment-005',
@@ -192,7 +214,8 @@ export const mockComments: Comment[] = [
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs + 1800 * 1000).toISOString(),
     isRead: true,
-    status: 'pending'
+    status: 'pending',
+    deliveryId: 'dlv-mock-001'
   },
   {
     id: 'comment-006',
@@ -203,7 +226,8 @@ export const mockComments: Comment[] = [
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs + 3600 * 1000).toISOString(),
     isRead: true,
-    status: 'accepted'
+    status: 'accepted',
+    deliveryId: 'dlv-mock-001'
   },
   {
     id: 'comment-007',
@@ -214,7 +238,8 @@ export const mockComments: Comment[] = [
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs + 5400 * 1000).toISOString(),
     isRead: false,
-    status: 'pending'
+    status: 'pending',
+    deliveryId: 'dlv-mock-001'
   },
   {
     id: 'comment-008',
@@ -225,7 +250,8 @@ export const mockComments: Comment[] = [
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs + 7200 * 1000).toISOString(),
     isRead: true,
-    status: 'rejected'
+    status: 'rejected',
+    deliveryId: 'dlv-mock-001'
   },
   {
     id: 'comment-009',

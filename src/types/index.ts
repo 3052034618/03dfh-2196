@@ -4,6 +4,8 @@ export type FeedbackLevel = 'urgent' | 'suggest' | 'reference';
 
 export type CommentStatus = 'pending' | 'accepted' | 'rejected';
 
+export type StatusFilterType = 'all' | CommentStatus;
+
 export type FocusArea = 'fight' | 'romance' | 'gag' | 'vertical' | 'story' | 'art';
 
 export interface FocusTag {
@@ -27,6 +29,28 @@ export interface ReviewSummary {
   pagesWithoutComments: number[];
 }
 
+export interface DeliveryRecord {
+  id: string;
+  taskId: string;
+  version: number;
+  summary: ReviewSummary;
+  commentIds: string[];
+  commentCount: number;
+  pageCount: number;
+  readPageCount: number;
+  deliveredAt: string;
+  note?: string;
+}
+
+export interface ReworkItem {
+  pageIndex: number;
+  comments: Comment[];
+  pendingCount: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  totalCount: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -44,6 +68,7 @@ export interface Task {
   panelImages: string[];
   progress?: TaskProgress;
   reviewSummary?: ReviewSummary;
+  deliveries?: DeliveryRecord[];
 }
 
 export interface Comment {
@@ -56,6 +81,7 @@ export interface Comment {
   createdAt: string;
   isRead: boolean;
   status: CommentStatus;
+  deliveryId?: string;
 }
 
 export interface ChatMessage {
@@ -91,3 +117,10 @@ export const COMMENT_STATUS_COLOR: Record<CommentStatus, string> = {
   accepted: '#00B42A',
   rejected: '#86909C'
 };
+
+export const STATUS_FILTER_TABS: { key: StatusFilterType; label: string }[] = [
+  { key: 'all', label: '全部状态' },
+  { key: 'pending', label: '待处理' },
+  { key: 'accepted', label: '已采纳' },
+  { key: 'rejected', label: '暂不采纳' }
+];

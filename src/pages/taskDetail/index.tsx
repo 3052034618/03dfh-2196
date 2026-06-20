@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import styles from './index.module.scss';
 import { useAppStore } from '@/store';
 import { STATUS_TEXT, formatDate, getFocusLabel, formatDateTime, LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
-import type { CommentSummary, CommentStatus, Comment } from '@/types';
+import type { CommentSummary, CommentStatus, Comment, DeliveryRecord, ReworkItem } from '@/types';
 import { COMMENT_STATUS_TEXT, COMMENT_STATUS_COLOR } from '@/types';
 
 const TaskDetailPage: React.FC = () => {
@@ -18,9 +18,14 @@ const TaskDetailPage: React.FC = () => {
   const getCommentSummaryByTaskId = useAppStore(s => s.getCommentSummaryByTaskId);
   const updateCommentStatus = useAppStore(s => s.updateCommentStatus);
   const getCommentCountByTaskAndPage = useAppStore(s => s.getCommentCountByTaskAndPage);
+  const getReworkList = useAppStore(s => s.getReworkList);
+  const getSafePanelImages = useAppStore(s => s.getSafePanelImages);
 
   const [selectedPage, setSelectedPage] = useState<number | null>(null);
   const [showAcceptance, setShowAcceptance] = useState(false);
+  const [showRework, setShowRework] = useState(false);
+  const [selectedDeliveryIdx, setSelectedDeliveryIdx] = useState<number | null>(null);
+  const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
 
   const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId]);
   const taskComments = useMemo(() => comments.filter(c => c.taskId === taskId), [comments, taskId]);
@@ -55,6 +60,40 @@ const TaskDetailPage: React.FC = () => {
     if (!taskId) return {};
     return getCommentCountByTaskAndPage(taskId);
   }, [taskId, comments]);
+
+  const safePanels = useMemo(() => {
+    if (!taskId) return [];
+    return getSafePanelImages(taskId);
+  }, [taskId, tasks]);
+
+  const reworkList: ReworkItem[] = useMemo(() => {
+    if (!taskId) return [];
+    return getReworkList(taskId);
+  }, [taskId, comments]);
+
+  const deliveries: DeliveryRecord[] = useMemo(() => {
+    return task?.deliveries || [];
+  }, [task]);
+
+  const activeDelivery: DeliveryRecord | null = useMemo(() => {
+    if (selectedDeliveryIdx !== null && deliveries[selectedDeliveryIdx]) {
+      return deliveries[selectedDeliveryIdx];
+    }
+    return deliveries.length > 0 ? deliveries[deliveries.length - 1] : null;
+  }, [deliveries, selectedDeliveryIdx]);
+
+  const reworkStats = useMemo(() => {
+    let totalPending = 0, totalAccepted = 0, totalRejected = 0, totalComments = 0;
+    reworkList.forEach(item => {
+      totalPending += item.pendingCount;
+      totalAccepted += item.acceptedCount;
+      totalRejected += item.rejectedCount;
+      totalComments += item.totalCount;
+    });
+    return { totalPending, totalAccepted, totalRejected, totalComments,
+      donePercent: totalComments > 0 ? Math.round(((totalAccepted + totalRejected) / totalComments) * 100) : 0
+    };
+  }, [reworkList]);
 
   const selectedPageComments = useMemo(() => {
     if (selectedPage === null) return [];
@@ -202,43 +241,214 @@ const TaskDetailPage: React.FC = () => {
           </View>
         </View>
 
-        {task.reviewSummary && (
+        {deliveries.length > 0 && (
           <View className={styles.section}>
-            <Text className={styles.sectionTitle}>审稿总结</Text>
-            <View className={styles.reviewSummary}>
-              {task.reviewSummary.mainIssues.length > 0 && (
-                <View className={styles.summaryBlock}>
-                  <Text className={styles.summaryBlockTitle}>🔴 主要问题</Text>
-                  {task.reviewSummary.mainIssues.map((issue, i) => (
-                    <Text key={i} className={styles.summaryItem}>• {issue}</Text>
-                  ))}
-                </View>
-              )}
-              {task.reviewSummary.priorityPages.length > 0 && (
-                <View className={styles.summaryBlock}>
-                  <Text className={styles.summaryBlockTitle}>🔥 优先修改页</Text>
-                  <View className={styles.priorityPages}>
-                    {task.reviewSummary.priorityPages.map((page, i) => (
-                      <Text key={i} className={styles.priorityPageBadge}>第{page}页</Text>
-                    ))}
-                  </View>
-                </View>
-              )}
-              <View className={styles.summaryBlock}>
-                <Text className={styles.summaryBlockTitle}>💡 整体建议</Text>
-                <Text className={styles.summaryAdvice}>{task.reviewSummary.overallAdvice}</Text>
-              </View>
-              {task.reviewSummary.focusCoverage.length > 0 && (
-                <View className={styles.summaryBlock}>
-                  <Text className={styles.summaryBlockTitle}>✅ 已覆盖重点</Text>
-                  <View className={styles.focusRow}>
-                    {task.reviewSummary.focusCoverage.map((tag, i) => (
-                      <Text key={i} className={styles.coveredTag}>{tag}</Text>
-                    ))}
-                  </View>
-                </View>
-              )}
+            <View className={styles.sectionHeader}>
+              <Text className={styles.sectionTitle}>交付记录</Text>
+              <Text
+                className={styles.toggleText}
+                onClick={() => setShowDeliveryHistory(!showDeliveryHistory)}
+              >
+                共 {deliveries.length} 版
+              </Text>
             </View>
+
+            {deliveries.length > 1 && (
+              <ScrollView scrollX className={styles.versionTabs}>
+                {deliveries.map((dlv, idx) => (
+                  <View
+                    key={dlv.id}
+                    className={classnames(styles.versionTab, {
+                      [styles.versionTabActive]: (selectedDeliveryIdx === null && idx === deliveries.length - 1) || selectedDeliveryIdx === idx
+                    })}
+                    onClick={() => setSelectedDeliveryIdx(idx)}
+                  >
+                    <Text className={styles.versionNum}>V{dlv.version}</Text>
+                    <Text className={styles.versionDate}>{formatDateTime(dlv.deliveredAt).slice(5, 16)}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            {activeDelivery && (
+              <View className={styles.reviewSummary}>
+                <View className={styles.deliveryHeader}>
+                  <View>
+                    <Text className={styles.deliveryTitle}>第 {activeDelivery.version} 版交付</Text>
+                    <Text className={styles.deliverySubtitle}>
+                      {activeDelivery.readPageCount}/{activeDelivery.pageCount}页 · {activeDelivery.commentCount}条意见 · {formatDateTime(activeDelivery.deliveredAt)}
+                    </Text>
+                  </View>
+                  <View className={styles.deliveryCoverage}>
+                    {Math.round(activeDelivery.summary.coverageRatio * 100)}%
+                  </View>
+                </View>
+
+                {activeDelivery.summary.mainIssues.length > 0 && (
+                  <View className={styles.summaryBlock}>
+                    <Text className={styles.summaryBlockTitle}>🔴 主要问题</Text>
+                    {activeDelivery.summary.mainIssues.map((issue, i) => (
+                      <Text key={i} className={styles.summaryItem}>• {issue}</Text>
+                    ))}
+                  </View>
+                )}
+                {activeDelivery.summary.priorityPages.length > 0 && (
+                  <View className={styles.summaryBlock}>
+                    <Text className={styles.summaryBlockTitle}>🔥 优先修改页</Text>
+                    <View className={styles.priorityPages}>
+                      {activeDelivery.summary.priorityPages.map((page, i) => (
+                        <Text key={i} className={styles.priorityPageBadge}>第{page}页</Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                <View className={styles.summaryBlock}>
+                  <Text className={styles.summaryBlockTitle}>💡 整体建议</Text>
+                  <Text className={styles.summaryAdvice}>{activeDelivery.summary.overallAdvice}</Text>
+                </View>
+                {activeDelivery.summary.focusCoverage.length > 0 && (
+                  <View className={styles.summaryBlock}>
+                    <Text className={styles.summaryBlockTitle}>✅ 已覆盖重点</Text>
+                    <View className={styles.focusRow}>
+                      {activeDelivery.summary.focusCoverage.map((tag, i) => (
+                        <Text key={i} className={styles.coveredTag}>{tag}</Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                {activeDelivery.summary.focusMissed.length > 0 && (
+                  <View className={styles.summaryBlock}>
+                    <Text className={styles.summaryBlockTitle}>⚠️ 未覆盖重点</Text>
+                    <View className={styles.focusRow}>
+                      {activeDelivery.summary.focusMissed.map((tag, i) => (
+                        <Text key={i} className={styles.missedTag}>{tag}</Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {task.status === 'completed' && reworkList.length > 0 && (
+          <View className={styles.section}>
+            <View className={styles.sectionHeader}>
+              <Text className={styles.sectionTitle}>返修清单</Text>
+              <Text
+                className={styles.toggleText}
+                onClick={() => setShowRework(!showRework)}
+              >
+                {showRework ? '收起' : '展开'} · {reworkStats.donePercent}%完成
+              </Text>
+            </View>
+
+            <View className={styles.reworkProgressBar}>
+              <View className={styles.reworkProgressFill} style={{ width: `${reworkStats.donePercent}%` }} />
+            </View>
+            <View className={styles.reworkProgressLabels}>
+              <Text className={styles.reworkProgressLabel}>
+                🟠 待处理 <Text style={{ fontWeight: 700, color: '#FF7D00' }}>{reworkStats.totalPending}</Text>
+              </Text>
+              <Text className={styles.reworkProgressLabel}>
+                🟢 已采纳 <Text style={{ fontWeight: 700, color: '#00B42A' }}>{reworkStats.totalAccepted}</Text>
+              </Text>
+              <Text className={styles.reworkProgressLabel}>
+                ⚪ 暂不采纳 <Text style={{ fontWeight: 700, color: '#86909C' }}>{reworkStats.totalRejected}</Text>
+              </Text>
+            </View>
+
+            {showRework && (
+              <View className={styles.reworkList}>
+                {reworkList.map((item, idx) => (
+                  <View key={idx} className={styles.reworkItem}>
+                    <View className={styles.reworkItemHeader}>
+                      <View className={styles.reworkPageInfo}>
+                        <Image
+                          className={styles.reworkThumb}
+                          src={safePanels[item.pageIndex - 1] || safePanels[(item.pageIndex - 1) % safePanels.length]}
+                          mode='aspectFill'
+                        />
+                        <View>
+                          <Text className={styles.reworkPageNum}>第{item.pageIndex}页</Text>
+                          <Text className={styles.reworkCount}>共{item.totalCount}条意见</Text>
+                        </View>
+                      </View>
+                      <View className={styles.reworkStatusBadges}>
+                        {item.pendingCount > 0 && (
+                          <View className={classnames(styles.reworkBadge, styles.reworkBadgePending)}>
+                            {item.pendingCount}待
+                          </View>
+                        )}
+                        {item.acceptedCount > 0 && (
+                          <View className={classnames(styles.reworkBadge, styles.reworkBadgeAccepted)}>
+                            {item.acceptedCount}采
+                          </View>
+                        )}
+                        {item.rejectedCount > 0 && (
+                          <View className={classnames(styles.reworkBadge, styles.reworkBadgeRejected)}>
+                            {item.rejectedCount}拒
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <View className={styles.reworkComments}>
+                      {item.comments.map(comment => (
+                        <View key={comment.id} className={styles.reworkComment}>
+                          <View className={styles.reworkCommentHeader}>
+                            <View
+                              className={styles.commentLevel}
+                              style={{
+                                background: `rgba(${LEVEL_COLOR[comment.level] === '#F53F3F' ? '245,63,63' : LEVEL_COLOR[comment.level] === '#FF7D00' ? '255,125,0' : '134,144,156'}, 0.1)`,
+                                color: LEVEL_COLOR[comment.level]
+                              }}
+                            >
+                              {LEVEL_TEXT[comment.level]}
+                            </View>
+                            <View
+                              className={styles.commentStatusTag}
+                              style={{
+                                background: `${COMMENT_STATUS_COLOR[comment.status]}15`,
+                                color: COMMENT_STATUS_COLOR[comment.status]
+                              }}
+                            >
+                              {COMMENT_STATUS_TEXT[comment.status]}
+                            </View>
+                          </View>
+                          <Text className={styles.commentContent}>{comment.content}</Text>
+                          <View className={styles.statusActions}>
+                            <Text
+                              className={classnames(styles.statusBtn, {
+                                [styles.statusBtnActive]: comment.status === 'pending'
+                              })}
+                              onClick={() => handleUpdateStatus(comment.id, 'pending')}
+                            >
+                              待处理
+                            </Text>
+                            <Text
+                              className={classnames(styles.statusBtn, {
+                                [styles.statusBtnActive]: comment.status === 'accepted'
+                              })}
+                              onClick={() => handleUpdateStatus(comment.id, 'accepted')}
+                            >
+                              已采纳
+                            </Text>
+                            <Text
+                              className={classnames(styles.statusBtn, {
+                                [styles.statusBtnActive]: comment.status === 'rejected'
+                              })}
+                              onClick={() => handleUpdateStatus(comment.id, 'rejected')}
+                            >
+                              暂不采纳
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -257,7 +467,7 @@ const TaskDetailPage: React.FC = () => {
             {showAcceptance && (
               <>
                 <View className={styles.acceptanceGrid}>
-                  {Array.from({ length: Math.min(totalPages, 30) }, (_, i) => i).map(page => {
+                  {Array.from({ length: totalPages }, (_, i) => i).map(page => {
                     const count = pageCommentCount[page + 1] || 0;
                     const pageStatus = getPageStatus(page);
                     const isSelected = selectedPage === page;
@@ -271,7 +481,7 @@ const TaskDetailPage: React.FC = () => {
                       >
                         <Image
                           className={styles.pageThumbImg}
-                          src={task.panelImages[page % task.panelImages.length]}
+                          src={safePanels[page] || safePanels[page % safePanels.length]}
                           mode='aspectFill'
                         />
                         <View className={styles.pageThumbInfo}>

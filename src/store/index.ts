@@ -8,7 +8,9 @@ import type {
   CommentSummary,
   CommentStatus,
   ReviewSummary,
-  FocusArea
+  FocusArea,
+  DeliveryRecord,
+  ReworkItem
 } from '@/types';
 import { mockTasks, mockComments, mockChatMessages, FOCUS_TAGS } from '@/data/mock';
 
@@ -22,6 +24,7 @@ interface AppStore {
   takeTask: (taskId: string) => void;
   completeTask: (taskId: string) => void;
   completeTaskWithSummary: (taskId: string, summary: ReviewSummary) => void;
+  deliverNewVersion: (taskId: string, summary: ReviewSummary) => void;
   markPageRead: (taskId: string, pageIndex: number) => void;
   addComment: (comment: Comment) => void;
   addChatMessage: (message: ChatMessage) => void;
@@ -42,6 +45,9 @@ interface AppStore {
     focusMissed: string[];
     coverageRatio: number;
   };
+  getDeliveriesByTaskId: (taskId: string) => DeliveryRecord[];
+  getReworkList: (taskId: string) => ReworkItem[];
+  getSafePanelImages: (taskId: string) => string[];
   setLastTakenTaskId: (taskId: string | null) => void;
   generatePanelImages: (pageCount: number) => string[];
 }
@@ -75,6 +81,20 @@ export const useAppStore = create<AppStore>()(
           images.push(PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]);
         }
         return images;
+      },
+
+      getSafePanelImages: (taskId: string) => {
+        const task = get().tasks.find(t => t.id === taskId);
+        if (!task) return [];
+        const { panelImages, pageCount } = task;
+        if (panelImages.length >= pageCount) {
+          return panelImages.slice(0, pageCount);
+        }
+        const result = [...panelImages];
+        for (let i = panelImages.length; i < pageCount; i++) {
+          result.push(PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]);
+        }
+        return result;
       },
 
       addTask: (task: Task) => {
@@ -124,6 +144,24 @@ export const useAppStore = create<AppStore>()(
       },
 
       completeTaskWithSummary: (taskId: string, summary: ReviewSummary) => {
+        const now = new Date().toISOString();
+        const task = get().tasks.find(t => t.id === taskId);
+        if (!task) return;
+        const taskComments = get().comments.filter(c => c.taskId === taskId);
+        const existingDeliveries = task.deliveries || [];
+        const newVersion = existingDeliveries.length + 1;
+        const newDelivery: DeliveryRecord = {
+          id: `dlv-${Date.now()}`,
+          taskId,
+          version: newVersion,
+          summary,
+          commentIds: taskComments.map(c => c.id),
+          commentCount: taskComments.length,
+          pageCount: task.pageCount,
+          readPageCount: task.progress?.readPages?.length || 0,
+          deliveredAt: now
+        };
+
         set(state => ({
           tasks: state.tasks.map(t =>
             t.id === taskId
@@ -132,15 +170,60 @@ export const useAppStore = create<AppStore>()(
                   status: 'completed' as TaskStatus,
                   progress: {
                     ...t.progress,
-                    completedAt: new Date().toISOString()
+                    completedAt: now
                   },
-                  reviewSummary: summary
+                  reviewSummary: summary,
+                  deliveries: [...existingDeliveries, newDelivery]
                 }
               : t
           ),
+          comments: state.comments.map(c =>
+            c.taskId === taskId && !c.deliveryId
+              ? { ...c, deliveryId: newDelivery.id }
+              : c
+          ),
           lastTakenTaskId: null
         }));
-        console.log('[Store] 完成审稿（带总结）', taskId);
+        console.log('[Store] 完成审稿（带总结+交付记录v' + newVersion + '）', taskId);
+      },
+
+      deliverNewVersion: (taskId: string, summary: ReviewSummary) => {
+        const now = new Date().toISOString();
+        const task = get().tasks.find(t => t.id === taskId);
+        if (!task) return;
+        const taskComments = get().comments.filter(c => c.taskId === taskId && !c.deliveryId);
+        const existingDeliveries = task.deliveries || [];
+        const newVersion = existingDeliveries.length + 1;
+        const newDelivery: DeliveryRecord = {
+          id: `dlv-${Date.now()}`,
+          taskId,
+          version: newVersion,
+          summary,
+          commentIds: taskComments.map(c => c.id),
+          commentCount: taskComments.length,
+          pageCount: task.pageCount,
+          readPageCount: task.progress?.readPages?.length || 0,
+          deliveredAt: now
+        };
+
+        set(state => ({
+          tasks: state.tasks.map(t =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  reviewSummary: summary,
+                  deliveries: [...existingDeliveries, newDelivery]
+                }
+              : t
+          ),
+          comments: state.comments.map(c =>
+            c.taskId === taskId && !c.deliveryId
+              ? { ...c, deliveryId: newDelivery.id }
+              : c
+          ),
+          lastTakenTaskId: null
+        }));
+        console.log('[Store] 新增交付版本 v' + newVersion, taskId);
       },
 
       markPageRead: (taskId: string, pageIndex: number) => {
@@ -180,7 +263,8 @@ export const useAppStore = create<AppStore>()(
       markCommentRead: (commentId: string) => {
         set(state => ({
           comments: state.comments.map(c =>
-            c.id === commentId ? { ...c, isRead: true } : c
+            c.id === commentId ? { ...c, isRead: true }
+              : c
           )
         }));
       },
@@ -273,13 +357,6 @@ export const useAppStore = create<AppStore>()(
         const totalPages = task.pageCount;
         const coverageRatio = totalPages > 0 ? commentPages / totalPages : 0;
 
-        const commentFocus = new Set<FocusArea>();
-        taskComments.forEach(c => {
-          if (c.pageIndex >= 0) {
-            commentFocus.add(c.level as FocusArea);
-          }
-        });
-
         const focusCoverage: string[] = [];
         const focusMissed: string[] = [];
 
@@ -307,6 +384,45 @@ export const useAppStore = create<AppStore>()(
           focusMissed,
           coverageRatio
         };
+      },
+
+      getDeliveriesByTaskId: (taskId: string) => {
+        const task = get().tasks.find(t => t.id === taskId);
+        return task?.deliveries || [];
+      },
+
+      getReworkList: (taskId: string) => {
+        const task = get().tasks.find(t => t.id === taskId);
+        if (!task) return [];
+        const taskComments = get().comments.filter(c => c.taskId === taskId);
+        const pageMap = new Map<number, Comment[]>();
+
+        taskComments.forEach(c => {
+          if (!pageMap.has(c.pageIndex)) {
+            pageMap.set(c.pageIndex, []);
+          }
+          pageMap.get(c.pageIndex)!.push(c);
+        });
+
+        const items: ReworkItem[] = [];
+        pageMap.forEach((comments, pageIndex) => {
+          items.push({
+            pageIndex,
+            comments: comments.sort((a, b) => {
+              const statusOrder = { pending: 0, accepted: 1, rejected: 2 } as Record<string, number>;
+              return statusOrder[a.status] - statusOrder[b.status];
+            }),
+            pendingCount: comments.filter(c => c.status === 'pending').length,
+            acceptedCount: comments.filter(c => c.status === 'accepted').length,
+            rejectedCount: comments.filter(c => c.status === 'rejected').length,
+            totalCount: comments.length
+          });
+        });
+
+        return items.sort((a, b) => {
+          if (a.pendingCount !== b.pendingCount) return b.pendingCount - a.pendingCount;
+          return a.pageIndex - b.pageIndex;
+        });
       },
 
       setLastTakenTaskId: (taskId: string | null) => {

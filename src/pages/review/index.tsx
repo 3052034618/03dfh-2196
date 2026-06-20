@@ -26,9 +26,11 @@ const ReviewPage: React.FC = () => {
   const addComment = useAppStore(s => s.addComment);
   const completeTask = useAppStore(s => s.completeTask);
   const completeTaskWithSummary = useAppStore(s => s.completeTaskWithSummary);
+  const deliverNewVersion = useAppStore(s => s.deliverNewVersion);
   const markPageRead = useAppStore(s => s.markPageRead);
   const getCommentSummaryByTaskId = useAppStore(s => s.getCommentSummaryByTaskId);
   const getCoverageInfo = useAppStore(s => s.getCoverageInfo);
+  const getSafePanelImages = useAppStore(s => s.getSafePanelImages);
   const lastTakenTaskId = useAppStore(s => s.lastTakenTaskId);
 
   const inProgressTasks = useMemo(() => tasks.filter(t => t.status === 'inProgress'), [tasks]);
@@ -229,15 +231,19 @@ const ReviewPage: React.FC = () => {
       overallAdvice: summaryText || generatedSummary.overallAdvice
     };
 
-    completeTaskWithSummary(currentTask.id, finalSummary);
+    if (hasExistingDeliveries) {
+      deliverNewVersion(currentTask.id, finalSummary);
+    } else {
+      completeTaskWithSummary(currentTask.id, finalSummary);
+    }
     setShowFinishSummary(false);
     setGeneratedSummary(null);
 
     Taro.showToast({
-      title: '审稿完成',
+      title: hasExistingDeliveries ? '已提交新版' : '审稿完成',
       icon: 'success'
     });
-    console.log('[Review] 确认完成审稿（带总结）', currentTask.id);
+    console.log('[Review] 确认完成审稿（', hasExistingDeliveries ? '补充' : '首次', '交付）', currentTask.id);
   };
 
   const handleCancelFinish = () => {
@@ -262,6 +268,8 @@ const ReviewPage: React.FC = () => {
   const progressPercent = Math.round((readCount / totalPages) * 100);
   const isCurrentPageRead = currentTask.progress?.readPages?.includes(currentPage + 1);
   const summary: CommentSummary = getCommentSummaryByTaskId(currentTask.id);
+  const hasExistingDeliveries = currentTask.deliveries && currentTask.deliveries.length > 0;
+  const safePanels = currentTask ? getSafePanelImages(currentTask.id) : [];
 
   return (
     <View className={styles.page}>
@@ -269,7 +277,9 @@ const ReviewPage: React.FC = () => {
         <View className={styles.emptyState} style={{ justifyContent: 'flex-start', paddingTop: 20, paddingBottom: 40 }}>
           <ScrollView scrollY style={{ width: '100%', height: '100%' }}>
             <View className={styles.finishSummary}>
-              <Text className={styles.finishTitle}>审稿交付确认</Text>
+              <Text className={styles.finishTitle}>
+                {hasExistingDeliveries ? '补充新版交付' : '审稿交付确认'}
+              </Text>
               <View style={{ fontSize: 28, color: '#4E5969', marginBottom: 24 }}>
                 {currentTask.title}
               </View>
@@ -439,7 +449,7 @@ const ReviewPage: React.FC = () => {
               onChange={handleSwiperChange}
               indicatorDots={false}
             >
-              {currentTask.panelImages.map((img, index) => (
+              {safePanels.map((img, index) => (
                 <SwiperItem key={index}>
                   <View className={styles.panelItem}>
                     <Image
