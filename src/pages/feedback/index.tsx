@@ -6,7 +6,7 @@ import styles from './index.module.scss';
 import FeedbackItem from '@/components/FeedbackItem';
 import ChatBubble from '@/components/ChatBubble';
 import { useAppStore } from '@/store';
-import type { Comment, FeedbackLevel, ChatMessage } from '@/types';
+import type { Comment, FeedbackLevel, ChatMessage, Task } from '@/types';
 import { LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
 
 type FilterType = 'all' | FeedbackLevel;
@@ -26,29 +26,100 @@ const SIMULATED_REPLIES = [
   '了解，我重新审视一下这个分镜的布局，看看能否优化'
 ];
 
+interface WorkGroup {
+  workName: string;
+  episodes: {
+    task: Task;
+    episode: number;
+    comments: Comment[];
+    summary: { urgent: number; suggest: number; reference: number };
+  }[];
+  totalComments: number;
+}
+
 const FeedbackPage: React.FC = () => {
-  const comments = useAppStore(s => s.comments);
   const tasks = useAppStore(s => s.tasks);
+  const comments = useAppStore(s => s.comments);
   const chatMessages = useAppStore(s => s.chatMessages);
   const addChatMessage = useAppStore(s => s.addChatMessage);
   const getTaskById = useAppStore(s => s.getTaskById);
+  const getCommentSummaryAll = useAppStore(s => s.getCommentSummaryAll);
 
+  const [viewMode, setViewMode] = useState<'group' | 'detail'>('group');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [showChat, setShowChat] = useState(false);
   const [activeComment, setActiveComment] = useState<Comment | null>(null);
   const [inputText, setInputText] = useState('');
 
-  const urgentCount = comments.filter(c => c.level === 'urgent' && !c.isRead).length;
-  const suggestCount = comments.filter(c => c.level === 'suggest').length;
-  const referenceCount = comments.filter(c => c.level === 'reference').length;
+  const summary = useMemo(() => getCommentSummaryAll(), [comments]);
+
+  const workGroups = useMemo((): WorkGroup[] => {
+    const taskMap = new Map<string, WorkGroup>();
+
+    tasks.forEach(task => {
+      const taskComments = comments.filter(c => c.taskId === task.id);
+      if (taskComments.length === 0) return;
+
+      const taskSummary = {
+        urgent: taskComments.filter(c => c.level === 'urgent').length,
+        suggest: taskComments.filter(c => c.level === 'suggest').length,
+        reference: taskComments.filter(c => c.level === 'reference').length
+      };
+
+      if (!taskMap.has(task.workName)) {
+        taskMap.set(task.workName, {
+          workName: task.workName,
+          episodes: [],
+          totalComments: 0
+        });
+      }
+
+      const group = taskMap.get(task.workName)!;
+      group.episodes.push({
+        task,
+        episode: task.episode,
+        comments: taskComments,
+        summary: taskSummary
+      });
+      group.totalComments += taskComments.length;
+    });
+
+    return Array.from(taskMap.values()).sort((a, b) => b.totalComments - a.totalComments);
+  }, [tasks, comments]);
 
   const filteredComments = useMemo(() => {
-    let list = activeFilter === 'all' ? comments : comments.filter(c => c.level === activeFilter);
+    if (!selectedTask) return [];
+    const taskComments = comments.filter(c => c.taskId === selectedTask.id);
+    let list = activeFilter === 'all' ? taskComments : taskComments.filter(c => c.level === activeFilter);
     return list.sort((a, b) => {
       if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [comments, activeFilter]);
+  }, [selectedTask, comments, activeFilter]);
+
+  const currentTaskSummary = useMemo(() => {
+    if (!selectedTask) return { urgent: 0, suggest: 0, reference: 0 };
+    const taskComments = comments.filter(c => c.taskId === selectedTask.id);
+    return {
+      urgent: taskComments.filter(c => c.level === 'urgent').length,
+      suggest: taskComments.filter(c => c.level === 'suggest').length,
+      reference: taskComments.filter(c => c.level === 'reference').length
+    };
+  }, [selectedTask, comments]);
+
+  const handleClickEpisode = (task: Task) => {
+    setSelectedTask(task);
+    setViewMode('detail');
+    setActiveFilter('all');
+    console.log('[Feedback] 进入话数详情', task.id);
+  };
+
+  const handleBackToGroup = () => {
+    setViewMode('group');
+    setSelectedTask(null);
+    console.log('[Feedback] 返回作品分组');
+  };
 
   const handleAsk = (commentId: string) => {
     const comment = comments.find(c => c.id === commentId);
@@ -113,79 +184,179 @@ const FeedbackPage: React.FC = () => {
       : [];
   }, [chatMessages, activeComment]);
 
+  const activeCommentTask = useMemo(() => {
+    return activeComment ? getTaskById(activeComment.taskId) : null;
+  }, [activeComment, tasks]);
+
+  const renderGroupView = () => (
+    <>
+      <View className={styles.header}>
+        <Text className={styles.title}>意见反馈</Text>
+        <Text className={styles.subTitle}>按作品查看审稿顾问给出的修改意见</Text>
+      </View>
+
+      <View className={styles.statsRow}>
+        <View className={classnames(styles.statCard, styles.statCardUrgent)}>
+          <Text className={classnames(styles.statNum, styles.statNumUrgent)}>{summary.urgent}</Text>
+          <Text className={styles.statLabel}>必须修改</Text>
+        </View>
+        <View className={classnames(styles.statCard, styles.statCardSuggest)}>
+          <Text className={classnames(styles.statNum, styles.statNumSuggest)}>{summary.suggest}</Text>
+          <Text className={styles.statLabel}>建议优化</Text>
+        </View>
+        <View className={classnames(styles.statCard, styles.statCardReference)}>
+          <Text className={classnames(styles.statNum, styles.statNumReference)}>{summary.reference}</Text>
+          <Text className={styles.statLabel}>仅供参考</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        scrollY
+        className={styles.commentList}
+        refresherEnabled
+        onRefresherRefresh={handleRefresh}
+      >
+        {workGroups.length > 0 ? (
+          workGroups.map(group => (
+            <View key={group.workName} className={styles.workGroupCard}>
+              <View className={styles.workGroupHeader}>
+                <Text className={styles.workGroupIcon}>📚</Text>
+                <Text className={styles.workGroupTitle}>{group.workName}</Text>
+                <Text className={styles.workGroupCount}>
+                  {group.totalComments} 条意见
+                </Text>
+              </View>
+              <View className={styles.workGroupEpisodes}>
+                {group.episodes
+                  .sort((a, b) => a.episode - b.episode)
+                  .map(ep => (
+                    <View
+                      key={ep.task.id}
+                      className={styles.episodeItem}
+                      onClick={() => handleClickEpisode(ep.task)}
+                    >
+                      <View className={styles.episodeInfo}>
+                        <Text className={styles.episodeName}>第{ep.episode}话</Text>
+                        <Text className={styles.episodeMeta}>
+                          {ep.task.reviewerName || '待接单'}
+                        </Text>
+                      </View>
+                      <View className={styles.episodeStats}>
+                        {ep.summary.urgent > 0 && (
+                          <Text className={classnames(styles.episodeStat, styles.episodeStatUrgent)}>
+                            {ep.summary.urgent}
+                          </Text>
+                        )}
+                        {ep.summary.suggest > 0 && (
+                          <Text className={classnames(styles.episodeStat, styles.episodeStatSuggest)}>
+                            {ep.summary.suggest}
+                          </Text>
+                        )}
+                        {ep.summary.reference > 0 && (
+                          <Text className={classnames(styles.episodeStat, styles.episodeStatReference)}>
+                            {ep.summary.reference}
+                          </Text>
+                        )}
+                        <Text className={styles.episodeArrow}>›</Text>
+                      </View>
+                    </View>
+                  ))}
+              </View>
+            </View>
+          ))
+        ) : (
+          <View className={styles.emptyState}>
+            <Text className={styles.emptyIcon}>💬</Text>
+            <Text className={styles.emptyText}>暂无审稿意见</Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
+  );
+
+  const renderDetailView = () => (
+    <>
+      <View className={styles.detailHeader}>
+        <View className={styles.detailBack} onClick={handleBackToGroup}>
+          <Text>←</Text>
+          <Text>返回作品列表</Text>
+        </View>
+        <Text className={styles.detailTitle}>{selectedTask?.title}</Text>
+        <Text className={styles.detailSub}>
+          共 {selectedTask ? comments.filter(c => c.taskId === selectedTask.id).length : 0} 条意见
+        </Text>
+      </View>
+
+      <View className={styles.statsRow} style={{ paddingTop: 24, paddingBottom: 12 }}>
+        <View className={classnames(styles.statCard, styles.statCardUrgent)}>
+          <Text className={classnames(styles.statNum, styles.statNumUrgent)}>{currentTaskSummary.urgent}</Text>
+          <Text className={styles.statLabel}>必须修改</Text>
+        </View>
+        <View className={classnames(styles.statCard, styles.statCardSuggest)}>
+          <Text className={classnames(styles.statNum, styles.statNumSuggest)}>{currentTaskSummary.suggest}</Text>
+          <Text className={styles.statLabel}>建议优化</Text>
+        </View>
+        <View className={classnames(styles.statCard, styles.statCardReference)}>
+          <Text className={classnames(styles.statNum, styles.statNumReference)}>{currentTaskSummary.reference}</Text>
+          <Text className={styles.statLabel}>仅供参考</Text>
+        </View>
+      </View>
+
+      <View className={styles.levelTabs}>
+        {LEVEL_TABS.map(tab => {
+          const isActive = activeFilter === tab.key;
+          const count =
+            tab.key === 'urgent' ? currentTaskSummary.urgent :
+            tab.key === 'suggest' ? currentTaskSummary.suggest :
+            tab.key === 'reference' ? currentTaskSummary.reference : 0;
+          return (
+            <View
+              key={tab.key}
+              className={classnames(
+                styles.levelTab,
+                styles[`levelTab${tab.styleKey}`],
+                { [styles.levelTabActive]: isActive }
+              )}
+              onClick={() => setActiveFilter(tab.key)}
+            >
+              {tab.label}
+              {count > 0 && (
+                <Text className={styles.levelTabBadge}>{count}</Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+
+      <ScrollView
+        scrollY
+        className={styles.commentList}
+        refresherEnabled
+        onRefresherRefresh={handleRefresh}
+      >
+        {filteredComments.length > 0 ? (
+          filteredComments.map(comment => (
+            <FeedbackItem
+              key={comment.id}
+              comment={comment}
+              task={selectedTask || undefined}
+              onAsk={handleAsk}
+            />
+          ))
+        ) : (
+          <View className={styles.emptyState}>
+            <Text className={styles.emptyIcon}>💬</Text>
+            <Text className={styles.emptyText}>暂无此类意见</Text>
+          </View>
+        )}
+      </ScrollView>
+    </>
+  );
+
   return (
     <View className={styles.page}>
       {!showChat ? (
-        <>
-          <View className={styles.header}>
-            <Text className={styles.title}>意见反馈</Text>
-            <Text className={styles.subTitle}>查看审稿顾问给出的修改意见</Text>
-          </View>
-
-          <View className={styles.statsRow}>
-            <View className={classnames(styles.statCard, styles.statCardUrgent)}>
-              <Text className={classnames(styles.statNum, styles.statNumUrgent)}>{urgentCount}</Text>
-              <Text className={styles.statLabel}>必须修改</Text>
-            </View>
-            <View className={classnames(styles.statCard, styles.statCardSuggest)}>
-              <Text className={classnames(styles.statNum, styles.statNumSuggest)}>{suggestCount}</Text>
-              <Text className={styles.statLabel}>建议优化</Text>
-            </View>
-            <View className={classnames(styles.statCard, styles.statCardReference)}>
-              <Text className={classnames(styles.statNum, styles.statNumReference)}>{referenceCount}</Text>
-              <Text className={styles.statLabel}>仅供参考</Text>
-            </View>
-          </View>
-
-          <View className={styles.levelTabs}>
-            {LEVEL_TABS.map(tab => {
-              const isActive = activeFilter === tab.key;
-              const count =
-                tab.key === 'urgent' ? urgentCount :
-                tab.key === 'suggest' ? suggestCount :
-                tab.key === 'reference' ? referenceCount : 0;
-              return (
-                <View
-                  key={tab.key}
-                  className={classnames(
-                    styles.levelTab,
-                    styles[`levelTab${tab.styleKey}`],
-                    { [styles.levelTabActive]: isActive }
-                  )}
-                  onClick={() => setActiveFilter(tab.key)}
-                >
-                  {tab.label}
-                  {count > 0 && (
-                    <Text className={styles.levelTabBadge}>{count}</Text>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-
-          <ScrollView
-            scrollY
-            className={styles.commentList}
-            refresherEnabled
-            onRefresherRefresh={handleRefresh}
-          >
-            {filteredComments.length > 0 ? (
-              filteredComments.map(comment => (
-                <FeedbackItem
-                  key={comment.id}
-                  comment={comment}
-                  task={getTaskById(comment.taskId)}
-                  onAsk={handleAsk}
-                />
-              ))
-            ) : (
-              <View className={styles.emptyState}>
-                <Text className={styles.emptyIcon}>💬</Text>
-                <Text className={styles.emptyText}>暂无此类意见</Text>
-              </View>
-            )}
-          </ScrollView>
-        </>
+        viewMode === 'group' ? renderGroupView() : renderDetailView()
       ) : (
         <View className={styles.chatModal}>
           <View className={styles.chatHeader}>
@@ -199,6 +370,14 @@ const FeedbackPage: React.FC = () => {
           <ScrollView scrollY className={styles.chatContent}>
             {activeComment && (
               <View className={styles.originalComment}>
+                <View className={styles.originalMeta}>
+                  <Text className={styles.originalTask}>
+                    📄 {activeCommentTask?.title || '未知任务'}
+                  </Text>
+                  <Text className={styles.originalPage}>
+                    第{activeComment.pageIndex}页
+                  </Text>
+                </View>
                 <View className={styles.originalHeader}>
                   <View
                     className={styles.originalLevel}
@@ -209,7 +388,6 @@ const FeedbackPage: React.FC = () => {
                   >
                     {LEVEL_TEXT[activeComment.level]}
                   </View>
-                  <Text className={styles.originalPage}>第{activeComment.pageIndex}页</Text>
                 </View>
                 <Text className={styles.originalText}>{activeComment.content}</Text>
               </View>

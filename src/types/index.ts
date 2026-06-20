@@ -9,6 +9,12 @@ export interface FocusTag {
   label: string;
 }
 
+export interface TaskProgress {
+  readPages: number[];
+  completedAt?: string;
+  lastViewedPage?: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -24,6 +30,7 @@ export interface Task {
   description: string;
   coverImage: string;
   panelImages: string[];
+  progress?: TaskProgress;
 }
 
 export interface Comment {
@@ -51,4 +58,10 @@ export interface CommentTemplate {
   category: string;
   content: string;
   level: FeedbackLevel;
+}
+
+export interface CommentSummary {
+  urgent: number;
+  suggest: number;
+  reference: number;
 }

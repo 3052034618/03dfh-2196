@@ -317,3 +317,172 @@
   margin-top: $spacing-xs;
   text-align: center;
 }
+
+.progressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 11;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  transition: width $transition-base;
+}
+
+.readBadge {
+  position: absolute;
+  top: 120rpx;
+  right: $page-padding;
+  background: rgba(0, 180, 42, 0.9);
+  color: #fff;
+  font-size: $font-size-xs;
+  padding: 8rpx 20rpx;
+  border-radius: $radius-button;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  animation: fadeIn $transition-base;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.readCheck {
+  font-size: $font-size-sm;
+}
+
+.pageCommentCount {
+  position: absolute;
+  bottom: 180rpx;
+  right: $page-padding;
+  background: rgba(123, 92, 255, 0.9);
+  color: #fff;
+  font-size: $font-size-xs;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-button;
+  z-index: 10;
+}
+
+.taskSelectorCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  border: 3rpx solid transparent;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.taskSelectorActive {
+  border-color: $color-primary;
+  background: rgba(123, 92, 255, 0.05);
+}
+
+.selectorTaskInfo {
+  flex: 1;
+}
+
+.selectorTaskTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+}
+
+.selectorTaskMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.selectorProgress {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+}
+
+.finishSummary {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  margin: $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.finishTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.finishStats {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-xl;
+  margin-bottom: $spacing-lg;
+}
+
+.finishStat {
+  text-align: center;
+}
+
+.finishStatNum {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  display: block;
+}
+
+.finishStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.finishBtnRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+.finishBackBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  border-radius: $radius-button;
+  font-weight: $font-weight-medium;
+}
+
+.finishConfirmBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  border-radius: $radius-button;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 4rpx 16rpx rgba(123, 92, 255, 0.3);
+}

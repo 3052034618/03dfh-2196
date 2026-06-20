@@ -268,3 +268,157 @@
     transform: scale(0.98);
   }
 }
+
+.workGroupCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.95;
+    transform: scale(0.99);
+  }
+}
+
+.workGroupHeader {
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.workGroupIcon {
+  font-size: $font-size-xl;
+}
+
+.workGroupTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+}
+
+.workGroupCount {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  background: $color-bg-tag;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-button;
+}
+
+.workGroupEpisodes {
+  padding: $spacing-sm 0;
+}
+
+.episodeItem {
+  padding: $spacing-md $spacing-lg;
+  display: flex;
+  align-items: center;
+  transition: all $transition-fast;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+}
+
+.episodeInfo {
+  flex: 1;
+}
+
+.episodeName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.episodeMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.episodeStats {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.episodeStat {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  min-width: 52rpx;
+  justify-content: flex-end;
+}
+
+.episodeStatUrgent { color: $color-urgent; }
+.episodeStatSuggest { color: $color-suggest; }
+.episodeStatReference { color: $color-reference; }
+
+.episodeArrow {
+  color: $color-text-tertiary;
+  font-size: $font-size-lg;
+  margin-left: $spacing-xs;
+}
+
+.detailHeader {
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.detailBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.detailTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.detailSub {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.originalMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-bg-page;
+  border-radius: $radius-xs;
+}
+
+.originalTask {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  @include text-ellipsis;
+  max-width: 280rpx;
+}
+
+.originalPage {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+}

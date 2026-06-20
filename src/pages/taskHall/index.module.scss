@@ -113,3 +113,203 @@
   font-size: $font-size-md;
   color: $color-text-tertiary;
 }
+
+.roleSwitcher {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  margin: 0 $page-padding $spacing-md;
+  padding: 8rpx;
+  box-shadow: $shadow-card;
+}
+
+.roleTab {
+  flex: 1;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+  font-weight: $font-weight-medium;
+  gap: $spacing-xs;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.roleTabActive {
+  background: linear-gradient(135deg, $color-secondary 0%, $color-secondary-light 100%);
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 129, 0.3);
+}
+
+.roleIcon {
+  font-size: $font-size-md;
+}
+
+.myPublishCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.99);
+  }
+}
+
+.publishCover {
+  width: 100%;
+  height: 200rpx;
+  display: block;
+}
+
+.publishContent {
+  padding: $spacing-md $spacing-lg;
+}
+
+.publishHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-xs;
+}
+
+.publishTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.publishStatus {
+  font-size: $font-size-xs;
+  padding: 4rpx 14rpx;
+  border-radius: $radius-xs;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+}
+
+.publishStatusPending {
+  background: rgba(123, 92, 255, 0.1);
+  color: $color-primary;
+}
+
+.publishStatusProgress {
+  background: rgba(255, 125, 0, 0.1);
+  color: $color-warning;
+}
+
+.publishStatusCompleted {
+  background: rgba(0, 180, 42, 0.1);
+  color: $color-success;
+}
+
+.publishMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+}
+
+.publishMetaText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.publishMetaDot {
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.publishProgress {
+  margin-bottom: $spacing-sm;
+}
+
+.progressBar {
+  height: 12rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-round;
+  overflow: hidden;
+  margin-bottom: $spacing-xs;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.progressText {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: flex;
+  justify-content: space-between;
+}
+
+.publishStats {
+  display: flex;
+  gap: $spacing-md;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statNum {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  display: block;
+}
+
+.statNumUrgent { color: $color-urgent; }
+.statNumSuggest { color: $color-suggest; }
+.statNumReference { color: $color-reference; }
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.quickFilter {
+  display: flex;
+  gap: $spacing-xs;
+  padding: 0 $page-padding $spacing-md;
+  overflow-x: auto;
+}
+
+.quickFilterItem {
+  flex-shrink: 0;
+  padding: 10rpx 24rpx;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.quickFilterActive {
+  background: $color-primary;
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+}

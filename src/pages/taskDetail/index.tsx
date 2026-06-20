@@ -5,6 +5,7 @@ import classnames from 'classnames';
 import styles from './index.module.scss';
 import { useAppStore } from '@/store';
 import { STATUS_TEXT, formatDate, getFocusLabel, formatDateTime, LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
+import type { CommentSummary } from '@/types';
 
 const TaskDetailPage: React.FC = () => {
   const router = useRouter();
@@ -13,9 +14,14 @@ const TaskDetailPage: React.FC = () => {
   const tasks = useAppStore(s => s.tasks);
   const comments = useAppStore(s => s.comments);
   const takeTask = useAppStore(s => s.takeTask);
+  const getCommentSummaryByTaskId = useAppStore(s => s.getCommentSummaryByTaskId);
 
   const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId]);
   const taskComments = useMemo(() => comments.filter(c => c.taskId === taskId), [comments, taskId]);
+  const summary: CommentSummary = useMemo(() =>
+    taskId ? getCommentSummaryByTaskId(taskId) : { urgent: 0, suggest: 0, reference: 0 },
+    [taskId, comments]
+  );
 
   if (!task) {
     return (
@@ -32,6 +38,12 @@ const TaskDetailPage: React.FC = () => {
     [styles.statusProgress]: task.status === 'inProgress',
     [styles.statusCompleted]: task.status === 'completed'
   });
+
+  const readCount = task.progress?.readPages?.length || 0;
+  const totalPages = task.panelImages.length;
+  const progressPercent = totalPages > 0 ? Math.round((readCount / totalPages) * 100) : 0;
+  const readPages = task.progress?.readPages || [];
+  const completedAt = task.progress?.completedAt;
 
   const handleStartReview = () => {
     Taro.switchTab({
@@ -84,6 +96,73 @@ const TaskDetailPage: React.FC = () => {
             <Text className={styles.metaText}>{task.authorName}</Text>
           </View>
           <Text className={styles.description}>{task.description}</Text>
+        </View>
+
+        {completedAt && (
+          <View className={styles.completedInfo}>
+            <Text className={styles.completedIcon}>✅</Text>
+            <View>
+              <Text className={styles.completedText}>审稿已完成</Text>
+              <Text className={styles.completedTime}>
+                完成时间：{formatDateTime(completedAt)}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {task.status !== 'pending' && (
+          <View className={styles.progressSection}>
+            <View className={styles.progressLabelRow}>
+              <Text className={styles.progressLabel}>审稿进度</Text>
+              <Text className={styles.progressValue}>
+                {readCount}/{totalPages}页 · {progressPercent}%
+              </Text>
+            </View>
+            <View className={styles.progressBar}>
+              <View
+                className={styles.progressFill}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </View>
+            {totalPages <= 24 && (
+              <View className={styles.readPagesIndicator}>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <View
+                    key={page}
+                    className={classnames(styles.readPageDot, {
+                      [styles.unreadPageDot]: !readPages.includes(page)
+                    })}
+                  >
+                    {page}
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        <View className={styles.section}>
+          <Text className={styles.sectionTitle}>审稿意见汇总</Text>
+          <View className={styles.summaryCards}>
+            <View className={classnames(styles.summaryCard, styles.summaryCardUrgent)}>
+              <Text className={classnames(styles.summaryNum, styles.summaryNumUrgent)}>
+                {summary.urgent}
+              </Text>
+              <Text className={styles.summaryLabel}>必须修改</Text>
+            </View>
+            <View className={classnames(styles.summaryCard, styles.summaryCardSuggest)}>
+              <Text className={classnames(styles.summaryNum, styles.summaryNumSuggest)}>
+                {summary.suggest}
+              </Text>
+              <Text className={styles.summaryLabel}>建议优化</Text>
+            </View>
+            <View className={classnames(styles.summaryCard, styles.summaryCardReference)}>
+              <Text className={classnames(styles.summaryNum, styles.summaryNumReference)}>
+                {summary.reference}
+              </Text>
+              <Text className={styles.summaryLabel}>仅供参考</Text>
+            </View>
+          </View>
         </View>
 
         <View className={styles.section}>
