@@ -383,3 +383,205 @@
   margin-top: 4rpx;
   display: block;
 }
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.toggleText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.reviewSummary {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+}
+
+.summaryBlock {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.summaryBlockTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.summaryItem {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.8;
+  display: block;
+}
+
+.summaryAdvice {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.7;
+  display: block;
+}
+
+.priorityPages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.focusRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.coveredTag {
+  background: rgba(0, 180, 42, 0.1);
+  color: $color-success;
+  font-size: $font-size-xs;
+  padding: 8rpx 16rpx;
+  border-radius: $radius-sm;
+}
+
+.acceptanceGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.pageThumb {
+  position: relative;
+  border-radius: $radius-md;
+  overflow: hidden;
+  border: 4rpx solid transparent;
+  transition: all $transition-base;
+}
+
+.pageThumbSelected {
+  border-color: $color-primary;
+  box-shadow: 0 4rpx 16rpx rgba(123, 92, 255, 0.3);
+}
+
+.pageThumbImg {
+  width: 100%;
+  height: 180rpx;
+  object-fit: cover;
+  display: block;
+}
+
+.pageThumbInfo {
+  padding: 10rpx 8rpx;
+  background: $color-bg-page;
+}
+
+.pageThumbNum {
+  font-size: 20rpx;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.pageThumbCount {
+  display: inline-block;
+  font-size: 18rpx;
+  color: #fff;
+  padding: 2rpx 8rpx;
+  border-radius: $radius-round;
+  font-weight: $font-weight-medium;
+}
+
+.pageThumbNoComment {
+  display: inline-block;
+  font-size: 18rpx;
+  color: $color-text-tertiary;
+  background: $color-bg-hover;
+  padding: 2rpx 8rpx;
+  border-radius: $radius-round;
+}
+
+.selectedPageDetail {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.selectedPageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-border;
+}
+
+.selectedPageTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.selectedPageStatus {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.selectedCommentList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.selectedCommentItem {
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx dashed $color-border;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.commentStatusTag {
+  font-size: $font-size-xs;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-round;
+  font-weight: $font-weight-medium;
+}
+
+.statusActions {
+  display: flex;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx dashed $color-border;
+}
+
+.statusBtn {
+  flex: 1;
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs 0;
+  border-radius: $radius-sm;
+  background: $color-bg-hover;
+  border: none;
+  transition: all $transition-base;
+}
+
+.statusBtnActive {
+  color: $color-primary;
+  background: rgba(123, 92, 255, 0.1);
+  font-weight: $font-weight-medium;
+}

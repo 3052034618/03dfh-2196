@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import { View, Text, Image, Button } from '@tarojs/components';
+import React, { useMemo, useState } from 'react';
+import { View, Text, Image, Button, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import { useAppStore } from '@/store';
 import { STATUS_TEXT, formatDate, getFocusLabel, formatDateTime, LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
-import type { CommentSummary } from '@/types';
+import type { CommentSummary, CommentStatus, Comment } from '@/types';
+import { COMMENT_STATUS_TEXT, COMMENT_STATUS_COLOR } from '@/types';
 
 const TaskDetailPage: React.FC = () => {
   const router = useRouter();
@@ -15,6 +16,11 @@ const TaskDetailPage: React.FC = () => {
   const comments = useAppStore(s => s.comments);
   const takeTask = useAppStore(s => s.takeTask);
   const getCommentSummaryByTaskId = useAppStore(s => s.getCommentSummaryByTaskId);
+  const updateCommentStatus = useAppStore(s => s.updateCommentStatus);
+  const getCommentCountByTaskAndPage = useAppStore(s => s.getCommentCountByTaskAndPage);
+
+  const [selectedPage, setSelectedPage] = useState<number | null>(null);
+  const [showAcceptance, setShowAcceptance] = useState(false);
 
   const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId]);
   const taskComments = useMemo(() => comments.filter(c => c.taskId === taskId), [comments, taskId]);
@@ -40,10 +46,41 @@ const TaskDetailPage: React.FC = () => {
   });
 
   const readCount = task.progress?.readPages?.length || 0;
-  const totalPages = task.panelImages.length;
+  const totalPages = task.pageCount;
   const progressPercent = totalPages > 0 ? Math.round((readCount / totalPages) * 100) : 0;
   const readPages = task.progress?.readPages || [];
   const completedAt = task.progress?.completedAt;
+
+  const pageCommentCount = useMemo(() => {
+    if (!taskId) return {};
+    return getCommentCountByTaskAndPage(taskId);
+  }, [taskId, comments]);
+
+  const selectedPageComments = useMemo(() => {
+    if (selectedPage === null) return [];
+    return taskComments.filter(c => c.pageIndex === selectedPage + 1);
+  }, [selectedPage, taskComments]);
+
+  const getPageStatus = (page: number): CommentStatus => {
+    const pageComms = taskComments.filter(c => c.pageIndex === page + 1);
+    if (pageComms.length === 0) return 'accepted';
+    const allAccepted = pageComms.every(c => c.status === 'accepted');
+    const allRejected = pageComms.every(c => c.status === 'rejected');
+    const anyPending = pageComms.some(c => c.status === 'pending');
+    if (anyPending) return 'pending';
+    if (allAccepted) return 'accepted';
+    if (allRejected) return 'rejected';
+    return 'pending';
+  };
+
+  const handleUpdateStatus = (commentId: string, status: CommentStatus) => {
+    updateCommentStatus(commentId, status);
+    Taro.showToast({
+      title: '已更新状态',
+      icon: 'success',
+      duration: 1000
+    });
+  };
 
   const handleStartReview = () => {
     Taro.switchTab({
@@ -164,6 +201,173 @@ const TaskDetailPage: React.FC = () => {
             </View>
           </View>
         </View>
+
+        {task.reviewSummary && (
+          <View className={styles.section}>
+            <Text className={styles.sectionTitle}>审稿总结</Text>
+            <View className={styles.reviewSummary}>
+              {task.reviewSummary.mainIssues.length > 0 && (
+                <View className={styles.summaryBlock}>
+                  <Text className={styles.summaryBlockTitle}>🔴 主要问题</Text>
+                  {task.reviewSummary.mainIssues.map((issue, i) => (
+                    <Text key={i} className={styles.summaryItem}>• {issue}</Text>
+                  ))}
+                </View>
+              )}
+              {task.reviewSummary.priorityPages.length > 0 && (
+                <View className={styles.summaryBlock}>
+                  <Text className={styles.summaryBlockTitle}>🔥 优先修改页</Text>
+                  <View className={styles.priorityPages}>
+                    {task.reviewSummary.priorityPages.map((page, i) => (
+                      <Text key={i} className={styles.priorityPageBadge}>第{page}页</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+              <View className={styles.summaryBlock}>
+                <Text className={styles.summaryBlockTitle}>💡 整体建议</Text>
+                <Text className={styles.summaryAdvice}>{task.reviewSummary.overallAdvice}</Text>
+              </View>
+              {task.reviewSummary.focusCoverage.length > 0 && (
+                <View className={styles.summaryBlock}>
+                  <Text className={styles.summaryBlockTitle}>✅ 已覆盖重点</Text>
+                  <View className={styles.focusRow}>
+                    {task.reviewSummary.focusCoverage.map((tag, i) => (
+                      <Text key={i} className={styles.coveredTag}>{tag}</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {task.status === 'completed' && (
+          <View className={styles.section}>
+            <View className={styles.sectionHeader}>
+              <Text className={styles.sectionTitle}>逐页验收</Text>
+              <Text
+                className={styles.toggleText}
+                onClick={() => setShowAcceptance(!showAcceptance)}
+              >
+                {showAcceptance ? '收起' : '展开'}
+              </Text>
+            </View>
+
+            {showAcceptance && (
+              <>
+                <View className={styles.acceptanceGrid}>
+                  {Array.from({ length: Math.min(totalPages, 30) }, (_, i) => i).map(page => {
+                    const count = pageCommentCount[page + 1] || 0;
+                    const pageStatus = getPageStatus(page);
+                    const isSelected = selectedPage === page;
+                    return (
+                      <View
+                        key={page}
+                        className={classnames(styles.pageThumb, {
+                          [styles.pageThumbSelected]: isSelected
+                        })}
+                        onClick={() => setSelectedPage(isSelected ? null : page)}
+                      >
+                        <Image
+                          className={styles.pageThumbImg}
+                          src={task.panelImages[page % task.panelImages.length]}
+                          mode='aspectFill'
+                        />
+                        <View className={styles.pageThumbInfo}>
+                          <Text className={styles.pageThumbNum}>第{page + 1}页</Text>
+                          {count > 0 ? (
+                            <View
+                              className={styles.pageThumbCount}
+                              style={{ background: COMMENT_STATUS_COLOR[pageStatus] }}
+                            >
+                              {count}条
+                            </View>
+                          ) : (
+                            <View className={styles.pageThumbNoComment}>无意见</View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                {selectedPage !== null && (
+                  <View className={styles.selectedPageDetail}>
+                    <View className={styles.selectedPageHeader}>
+                      <Text className={styles.selectedPageTitle}>
+                        第{selectedPage + 1}页意见
+                      </Text>
+                      <Text
+                        className={styles.selectedPageStatus}
+                        style={{ color: COMMENT_STATUS_COLOR[getPageStatus(selectedPage)] }}
+                      >
+                        {COMMENT_STATUS_TEXT[getPageStatus(selectedPage)]}
+                      </Text>
+                    </View>
+                    {selectedPageComments.length > 0 ? (
+                      <View className={styles.selectedCommentList}>
+                        {selectedPageComments.map(comment => (
+                          <View key={comment.id} className={styles.selectedCommentItem}>
+                            <View className={styles.commentHeader}>
+                              <View
+                                className={styles.commentLevel}
+                                style={{
+                                  background: `rgba(${LEVEL_COLOR[comment.level] === '#F53F3F' ? '245,63,63' : LEVEL_COLOR[comment.level] === '#FF7D00' ? '255,125,0' : '134,144,156'}, 0.1)`,
+                                  color: LEVEL_COLOR[comment.level]
+                                }}
+                              >
+                                {LEVEL_TEXT[comment.level]}
+                              </View>
+                              <View
+                                className={styles.commentStatusTag}
+                                style={{
+                                  background: `${COMMENT_STATUS_COLOR[comment.status]}15`,
+                                  color: COMMENT_STATUS_COLOR[comment.status]
+                                }}
+                              >
+                                {COMMENT_STATUS_TEXT[comment.status]}
+                              </View>
+                            </View>
+                            <Text className={styles.commentContent}>{comment.content}</Text>
+                            <View className={styles.statusActions}>
+                              <Text
+                                className={classnames(styles.statusBtn, {
+                                  [styles.statusBtnActive]: comment.status === 'pending'
+                                })}
+                                onClick={() => handleUpdateStatus(comment.id, 'pending')}
+                              >
+                                待处理
+                              </Text>
+                              <Text
+                                className={classnames(styles.statusBtn, {
+                                  [styles.statusBtnActive]: comment.status === 'accepted'
+                                })}
+                                onClick={() => handleUpdateStatus(comment.id, 'accepted')}
+                              >
+                                已采纳
+                              </Text>
+                              <Text
+                                className={classnames(styles.statusBtn, {
+                                  [styles.statusBtnActive]: comment.status === 'rejected'
+                                })}
+                                onClick={() => handleUpdateStatus(comment.id, 'rejected')}
+                              >
+                                暂不采纳
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text className={styles.emptyComment}>本页暂无意见</Text>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        )}
 
         <View className={styles.section}>
           <Text className={styles.sectionTitle}>任务信息</Text>

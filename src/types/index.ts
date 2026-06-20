@@ -2,6 +2,8 @@ export type TaskStatus = 'pending' | 'inProgress' | 'completed';
 
 export type FeedbackLevel = 'urgent' | 'suggest' | 'reference';
 
+export type CommentStatus = 'pending' | 'accepted' | 'rejected';
+
 export type FocusArea = 'fight' | 'romance' | 'gag' | 'vertical' | 'story' | 'art';
 
 export interface FocusTag {
@@ -13,6 +15,16 @@ export interface TaskProgress {
   readPages: number[];
   completedAt?: string;
   lastViewedPage?: number;
+}
+
+export interface ReviewSummary {
+  mainIssues: string[];
+  priorityPages: number[];
+  overallAdvice: string;
+  coverageRatio: number;
+  focusCoverage: string[];
+  focusMissed: string[];
+  pagesWithoutComments: number[];
 }
 
 export interface Task {
@@ -31,6 +43,7 @@ export interface Task {
   coverImage: string;
   panelImages: string[];
   progress?: TaskProgress;
+  reviewSummary?: ReviewSummary;
 }
 
 export interface Comment {
@@ -42,6 +55,7 @@ export interface Comment {
   reviewerName: string;
   createdAt: string;
   isRead: boolean;
+  status: CommentStatus;
 }
 
 export interface ChatMessage {
@@ -65,3 +79,15 @@ export interface CommentSummary {
   suggest: number;
   reference: number;
 }
+
+export const COMMENT_STATUS_TEXT: Record<CommentStatus, string> = {
+  pending: '待处理',
+  accepted: '已采纳',
+  rejected: '暂不采纳'
+};
+
+export const COMMENT_STATUS_COLOR: Record<CommentStatus, string> = {
+  pending: '#FF7D00',
+  accepted: '#00B42A',
+  rejected: '#86909C'
+};

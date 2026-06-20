@@ -54,6 +54,39 @@
   margin-left: $spacing-sm;
 }
 
+.statusTag {
+  font-size: $font-size-xs;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.statusRow {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx dashed $color-border;
+}
+
+.statusBtn {
+  flex: 1;
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs 0;
+  border-radius: $radius-sm;
+  background: $color-bg-hover;
+  transition: all $transition-base;
+}
+
+.statusBtnActive {
+  color: $color-primary;
+  background: rgba(123, 92, 255, 0.1);
+  font-weight: $font-weight-medium;
+}
+
 .content {
   margin-bottom: $spacing-md;
 }

@@ -12,6 +12,7 @@ const PANEL_IDS = [1015, 1018, 1036, 1039, 1044, 10, 119, 160];
 
 const PublishTaskPage: React.FC = () => {
   const addTask = useAppStore(s => s.addTask);
+  const generatePanelImages = useAppStore(s => s.generatePanelImages);
   const [workName, setWorkName] = useState('');
   const [episode, setEpisode] = useState('');
   const [pageCount, setPageCount] = useState('');
@@ -62,10 +63,7 @@ const PublishTaskPage: React.FC = () => {
         if (res.confirm) {
           const pages = parseInt(pageCount) || 16;
           const coverId = COVER_IDS[Math.floor(Math.random() * COVER_IDS.length)];
-          const panelCount = Math.min(pages, PANEL_IDS.length);
-          const panels = PANEL_IDS.slice(0, panelCount).map(
-            id => `https://picsum.photos/id/${id}/750/1200`
-          );
+          const panels = generatePanelImages(pages);
 
           const newTask: Task = {
             id: `task-${Date.now()}`,

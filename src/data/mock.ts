@@ -1,7 +1,24 @@
-import type { Task, Comment, ChatMessage, CommentTemplate } from '@/types';
+import type { Task, Comment, ChatMessage, CommentTemplate, FocusTag } from '@/types';
 
 const now = Date.now();
 const dayMs = 24 * 60 * 60 * 1000;
+
+export const FOCUS_TAGS: FocusTag[] = [
+  { key: 'fight', label: '打斗动作' },
+  { key: 'romance', label: '情感互动' },
+  { key: 'gag', label: '搞笑笑点' },
+  { key: 'vertical', label: '竖屏阅读' },
+  { key: 'story', label: '剧情节奏' },
+  { key: 'art', label: '画面美术' }
+];
+
+const generatePanels = (pageCount: number, baseId: number): string[] => {
+  const panels: string[] = [];
+  for (let i = 0; i < pageCount; i++) {
+    panels.push(`https://picsum.photos/id/${baseId + i}/750/1200`);
+  }
+  return panels;
+};
 
 export const mockTasks: Task[] = [
   {
@@ -17,16 +34,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date(now - 1 * dayMs).toISOString(),
     description: '本话为高潮打斗章节，重点关注打斗分镜的流畅度和竖屏阅读体验，以及剧情转折是否自然。',
     coverImage: 'https://picsum.photos/id/1/750/500',
-    panelImages: [
-      'https://picsum.photos/id/1015/750/1200',
-      'https://picsum.photos/id/1018/750/1200',
-      'https://picsum.photos/id/1036/750/1200',
-      'https://picsum.photos/id/1039/750/1200',
-      'https://picsum.photos/id/1044/750/1200',
-      'https://picsum.photos/id/10/750/1200',
-      'https://picsum.photos/id/119/750/1200',
-      'https://picsum.photos/id/160/750/1200'
-    ]
+    panelImages: generatePanels(24, 101)
   },
   {
     id: 'task-002',
@@ -38,18 +46,15 @@ export const mockTasks: Task[] = [
     focusAreas: ['romance', 'gag'],
     status: 'inProgress',
     authorName: '小樱',
-    reviewerName: '资深顾问·林老师',
+    reviewerName: '我',
     createdAt: new Date(now - 2 * dayMs).toISOString(),
     description: '校园恋爱日常，重点关注情绪表达和笑点节奏把控。',
     coverImage: 'https://picsum.photos/id/1027/750/500',
-    panelImages: [
-      'https://picsum.photos/id/64/750/1200',
-      'https://picsum.photos/id/91/750/1200',
-      'https://picsum.photos/id/177/750/1200',
-      'https://picsum.photos/id/338/750/1200',
-      'https://picsum.photos/id/1027/750/1200',
-      'https://picsum.photos/id/237/750/1200'
-    ]
+    panelImages: generatePanels(18, 200),
+    progress: {
+      readPages: [1, 2, 3, 4, 5],
+      lastViewedPage: 4
+    }
   },
   {
     id: 'task-003',
@@ -64,13 +69,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date(now - 5 * 3600 * 1000).toISOString(),
     description: '平台赛稿参赛作品短篇试读，希望快速把关整体质量。',
     coverImage: 'https://picsum.photos/id/201/750/500',
-    panelImages: [
-      'https://picsum.photos/id/1/750/1200',
-      'https://picsum.photos/id/2/750/1200',
-      'https://picsum.photos/id/3/750/1200',
-      'https://picsum.photos/id/6/750/1200',
-      'https://picsum.photos/id/8/750/1200'
-    ]
+    panelImages: generatePanels(12, 300)
   },
   {
     id: 'task-004',
@@ -81,17 +80,26 @@ export const mockTasks: Task[] = [
     deadline: new Date(now - 1 * dayMs).toISOString(),
     focusAreas: ['gag', 'story'],
     status: 'completed',
-    authorName: '老江湖',
+    authorName: '我',
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 5 * dayMs).toISOString(),
     description: '武侠喜剧题材，重点关注包袱节奏和剧情推进。',
     coverImage: 'https://picsum.photos/id/1082/750/500',
-    panelImages: [
-      'https://picsum.photos/id/787/750/1200',
-      'https://picsum.photos/id/1082/750/1200',
-      'https://picsum.photos/id/3/750/1200',
-      'https://picsum.photos/id/10/750/1200'
-    ]
+    panelImages: generatePanels(20, 400),
+    progress: {
+      readPages: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      completedAt: new Date(now - 1 * dayMs).toISOString(),
+      lastViewedPage: 19
+    },
+    reviewSummary: {
+      mainIssues: ['第8页转场突兀，读者可能跟不上节奏', '第15页对话气泡遮挡表情', '整体笑点密度可以再提高'],
+      priorityPages: [7, 8, 15],
+      overallAdvice: '整体节奏不错，武侠氛围很到位。建议在第7-8页之间加一格过渡画面，第15页调整气泡位置。另外可以考虑在前几话增加更多人物立绘展示，帮助读者快速认识角色。',
+      coverageRatio: 0.85,
+      focusCoverage: ['搞笑笑点', '剧情节奏'],
+      focusMissed: [],
+      pagesWithoutComments: [4, 9, 12]
+    }
   },
   {
     id: 'task-005',
@@ -106,11 +114,7 @@ export const mockTasks: Task[] = [
     createdAt: new Date(now - 3 * 3600 * 1000).toISOString(),
     description: '科幻机甲战斗场景，重点关注机械打斗的分镜表现和画面冲击力。',
     coverImage: 'https://picsum.photos/id/119/750/500',
-    panelImages: [
-      'https://picsum.photos/id/119/750/1200',
-      'https://picsum.photos/id/160/750/1200',
-      'https://picsum.photos/id/201/750/1200'
-    ]
+    panelImages: generatePanels(22, 500)
   },
   {
     id: 'task-006',
@@ -126,11 +130,11 @@ export const mockTasks: Task[] = [
     createdAt: new Date(now - 1 * dayMs).toISOString(),
     description: '治愈系萌宠日常，审稿时关注可爱度和笑点表现。',
     coverImage: 'https://picsum.photos/id/237/750/500',
-    panelImages: [
-      'https://picsum.photos/id/237/750/1200',
-      'https://picsum.photos/id/659/750/1200',
-      'https://picsum.photos/id/718/750/1200'
-    ]
+    panelImages: generatePanels(16, 600),
+    progress: {
+      readPages: [1, 2, 3],
+      lastViewedPage: 2
+    }
   }
 ];
 
@@ -141,9 +145,10 @@ export const mockComments: Comment[] = [
     pageIndex: 2,
     content: '这个特写镜头非常好，女主脸红的表情捕捉到位，恋爱情绪感拉满！',
     level: 'reference',
-    reviewerName: '资深顾问·林老师',
+    reviewerName: '我',
     createdAt: new Date(now - 2 * 3600 * 1000).toISOString(),
-    isRead: true
+    isRead: true,
+    status: 'pending'
   },
   {
     id: 'comment-002',
@@ -151,9 +156,10 @@ export const mockComments: Comment[] = [
     pageIndex: 4,
     content: '第4页的笑点铺垫略显拖沓，建议缩减1-2格，让包袱抖得更干脆。',
     level: 'suggest',
-    reviewerName: '资深顾问·林老师',
+    reviewerName: '我',
     createdAt: new Date(now - 1.5 * 3600 * 1000).toISOString(),
-    isRead: true
+    isRead: true,
+    status: 'pending'
   },
   {
     id: 'comment-003',
@@ -161,9 +167,10 @@ export const mockComments: Comment[] = [
     pageIndex: 6,
     content: '最后一格的对话气泡位置挡住了男主的关键表情，必须调整位置或重新排版。',
     level: 'urgent',
-    reviewerName: '资深顾问·林老师',
+    reviewerName: '我',
     createdAt: new Date(now - 1 * 3600 * 1000).toISOString(),
-    isRead: false
+    isRead: false,
+    status: 'pending'
   },
   {
     id: 'comment-004',
@@ -173,7 +180,8 @@ export const mockComments: Comment[] = [
     level: 'reference',
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs).toISOString(),
-    isRead: true
+    isRead: true,
+    status: 'accepted'
   },
   {
     id: 'comment-005',
@@ -183,17 +191,52 @@ export const mockComments: Comment[] = [
     level: 'suggest',
     reviewerName: '资深顾问·陈老师',
     createdAt: new Date(now - 3 * dayMs + 1800 * 1000).toISOString(),
-    isRead: true
+    isRead: true,
+    status: 'pending'
   },
   {
     id: 'comment-006',
+    taskId: 'task-004',
+    pageIndex: 8,
+    content: '第8页的打斗分镜很精彩，动作流畅有张力！',
+    level: 'reference',
+    reviewerName: '资深顾问·陈老师',
+    createdAt: new Date(now - 3 * dayMs + 3600 * 1000).toISOString(),
+    isRead: true,
+    status: 'accepted'
+  },
+  {
+    id: 'comment-007',
+    taskId: 'task-004',
+    pageIndex: 15,
+    content: '第15页对话气泡挡住了反派的表情，影响读者理解情绪。',
+    level: 'urgent',
+    reviewerName: '资深顾问·陈老师',
+    createdAt: new Date(now - 3 * dayMs + 5400 * 1000).toISOString(),
+    isRead: false,
+    status: 'pending'
+  },
+  {
+    id: 'comment-008',
+    taskId: 'task-004',
+    pageIndex: 18,
+    content: '结尾的悬念留得很好，读者会想看下一话。',
+    level: 'reference',
+    reviewerName: '资深顾问·陈老师',
+    createdAt: new Date(now - 3 * dayMs + 7200 * 1000).toISOString(),
+    isRead: true,
+    status: 'rejected'
+  },
+  {
+    id: 'comment-009',
     taskId: 'task-006',
     pageIndex: 1,
     content: '灵宠出场很可爱，这一页的构图很棒！',
     level: 'reference',
     reviewerName: '顾问·小鹿',
     createdAt: new Date(now - 30 * 60 * 1000).toISOString(),
-    isRead: false
+    isRead: false,
+    status: 'pending'
   }
 ];
 
@@ -201,7 +244,7 @@ export const mockChatMessages: ChatMessage[] = [
   {
     id: 'msg-001',
     commentId: 'comment-003',
-    senderName: '资深顾问·林老师',
+    senderName: '我',
     senderRole: 'reviewer',
     content: '这里挡住了男主惊讶的表情，读者会错过重要的情绪反馈。',
     createdAt: new Date(now - 1 * 3600 * 1000).toISOString()
@@ -211,13 +254,13 @@ export const mockChatMessages: ChatMessage[] = [
     commentId: 'comment-003',
     senderName: '小樱',
     senderRole: 'author',
-    content: '好的林老师，我把气泡移到右上角可以吗？这样会不会挡住背景？',
+    content: '好的老师，我把气泡移到右上角可以吗？这样会不会挡住背景？',
     createdAt: new Date(now - 45 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-003',
     commentId: 'comment-003',
-    senderName: '资深顾问·林老师',
+    senderName: '我',
     senderRole: 'reviewer',
     content: '右上角没问题，那里留白比较多，不会影响阅读。',
     createdAt: new Date(now - 30 * 60 * 1000).toISOString()
@@ -225,7 +268,7 @@ export const mockChatMessages: ChatMessage[] = [
   {
     id: 'msg-004',
     commentId: 'comment-002',
-    senderName: '资深顾问·林老师',
+    senderName: '我',
     senderRole: 'reviewer',
     content: '前面铺垫了4格才抖包袱，读者耐心会被消耗。',
     createdAt: new Date(now - 1.5 * 3600 * 1000).toISOString()

@@ -6,7 +6,7 @@ import styles from './index.module.scss';
 import FeedbackItem from '@/components/FeedbackItem';
 import ChatBubble from '@/components/ChatBubble';
 import { useAppStore } from '@/store';
-import type { Comment, FeedbackLevel, ChatMessage, Task } from '@/types';
+import type { Comment, FeedbackLevel, ChatMessage, Task, CommentStatus } from '@/types';
 import { LEVEL_TEXT, LEVEL_COLOR } from '@/utils';
 
 type FilterType = 'all' | FeedbackLevel;
@@ -42,6 +42,7 @@ const FeedbackPage: React.FC = () => {
   const comments = useAppStore(s => s.comments);
   const chatMessages = useAppStore(s => s.chatMessages);
   const addChatMessage = useAppStore(s => s.addChatMessage);
+  const updateCommentStatus = useAppStore(s => s.updateCommentStatus);
   const getTaskById = useAppStore(s => s.getTaskById);
   const getCommentSummaryAll = useAppStore(s => s.getCommentSummaryAll);
 
@@ -176,6 +177,15 @@ const FeedbackPage: React.FC = () => {
     setTimeout(() => {
       Taro.stopPullDownRefresh();
     }, 800);
+  };
+
+  const handleUpdateStatus = (commentId: string, status: CommentStatus) => {
+    updateCommentStatus(commentId, status);
+    Taro.showToast({
+      title: '已更新状态',
+      icon: 'success',
+      duration: 1000
+    });
   };
 
   const activeMessages = useMemo(() => {
@@ -341,6 +351,7 @@ const FeedbackPage: React.FC = () => {
               comment={comment}
               task={selectedTask || undefined}
               onAsk={handleAsk}
+              onUpdateStatus={handleUpdateStatus}
             />
           ))
         ) : (

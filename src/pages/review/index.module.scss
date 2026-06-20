@@ -486,3 +486,77 @@
   font-weight: $font-weight-semibold;
   box-shadow: 0 4rpx 16rpx rgba(123, 92, 255, 0.3);
 }
+
+.checkSection {
+  text-align: left;
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.checkTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.checkTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.missedTag {
+  background: rgba(245, 63, 63, 0.1);
+  color: #F53F3F;
+  font-size: $font-size-xs;
+  padding: 8rpx 16rpx;
+  border-radius: $radius-sm;
+}
+
+.checkPages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+}
+
+.pageBadge {
+  background: rgba(255, 125, 0, 0.1);
+  color: #FF7D00;
+  font-size: $font-size-xs;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+}
+
+.pageMore {
+  color: $color-text-tertiary;
+  font-size: $font-size-xs;
+  padding: 6rpx 0;
+}
+
+.priorityPageBadge {
+  background: rgba(245, 63, 63, 0.15);
+  color: #F53F3F;
+  font-size: $font-size-xs;
+  padding: 6rpx 16rpx;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
+}
+
+.summaryTextareaWrap {
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-sm;
+  min-height: 120rpx;
+}
+
+.summaryTextarea {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  width: 100%;
+  display: block;
+}

@@ -6,7 +6,7 @@ import styles from './index.module.scss';
 import CommentTemplate from '@/components/CommentTemplate';
 import { useAppStore } from '@/store';
 import { mockTemplates } from '@/data/mock';
-import type { Task, FeedbackLevel, Comment, CommentSummary } from '@/types';
+import type { Task, FeedbackLevel, Comment, CommentSummary, ReviewSummary } from '@/types';
 import { LEVEL_TEXT } from '@/utils';
 
 const SIMULATED_VOICE_TEXTS = [
@@ -25,8 +25,10 @@ const ReviewPage: React.FC = () => {
   const comments = useAppStore(s => s.comments);
   const addComment = useAppStore(s => s.addComment);
   const completeTask = useAppStore(s => s.completeTask);
+  const completeTaskWithSummary = useAppStore(s => s.completeTaskWithSummary);
   const markPageRead = useAppStore(s => s.markPageRead);
   const getCommentSummaryByTaskId = useAppStore(s => s.getCommentSummaryByTaskId);
+  const getCoverageInfo = useAppStore(s => s.getCoverageInfo);
   const lastTakenTaskId = useAppStore(s => s.lastTakenTaskId);
 
   const inProgressTasks = useMemo(() => tasks.filter(t => t.status === 'inProgress'), [tasks]);
@@ -38,6 +40,8 @@ const ReviewPage: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<FeedbackLevel>('suggest');
   const [isRecording, setIsRecording] = useState(false);
   const [showFinishSummary, setShowFinishSummary] = useState(false);
+  const [summaryText, setSummaryText] = useState('');
+  const [generatedSummary, setGeneratedSummary] = useState<ReviewSummary | null>(null);
 
   useEffect(() => {
     if (inProgressTasks.length === 0) return;
@@ -154,7 +158,8 @@ const ReviewPage: React.FC = () => {
       level: selectedLevel,
       reviewerName: '我',
       createdAt: new Date().toISOString(),
-      isRead: true
+      isRead: true,
+      status: 'pending'
     };
 
     addComment(newComment);
@@ -173,8 +178,29 @@ const ReviewPage: React.FC = () => {
     if (!currentTask) return;
     const summary = getCommentSummaryByTaskId(currentTask.id);
     const totalComments = summary.urgent + summary.suggest + summary.reference;
-    const totalPages = currentTask.panelImages.length;
+    const totalPages = currentTask.pageCount;
     const readPages = currentTask.progress?.readPages?.length || 0;
+    const coverage = getCoverageInfo(currentTask.id);
+
+    const taskComments = comments.filter(c => c.taskId === currentTask.id);
+    const urgentComments = taskComments.filter(c => c.level === 'urgent');
+    const mainIssues = urgentComments.slice(0, 5).map(c => `第${c.pageIndex}页：${c.content.slice(0, 30)}...`);
+    const priorityPages = Array.from(new Set(urgentComments.map(c => c.pageIndex))).sort((a, b) => a - b);
+
+    const overallAdvice = `本次审稿共审阅 ${readPages}/${totalPages} 页，提交 ${totalComments} 条意见。其中必须修改 ${summary.urgent} 条，建议优化 ${summary.suggest} 条，仅供参考 ${summary.reference} 条。建议优先处理必须修改的问题，再逐步优化其他建议。`;
+
+    const reviewSummary: ReviewSummary = {
+      mainIssues: mainIssues.length > 0 ? mainIssues : ['暂无必须修改的问题'],
+      priorityPages,
+      overallAdvice,
+      coverageRatio: coverage.coverageRatio,
+      focusCoverage: coverage.focusCoverage,
+      focusMissed: coverage.focusMissed,
+      pagesWithoutComments: coverage.pagesWithoutComments
+    };
+
+    setGeneratedSummary(reviewSummary);
+    setSummaryText(overallAdvice);
 
     if (readPages < totalPages) {
       Taro.showModal({
@@ -196,14 +222,22 @@ const ReviewPage: React.FC = () => {
   };
 
   const handleConfirmFinish = () => {
-    if (!currentTask) return;
-    completeTask(currentTask.id);
+    if (!currentTask || !generatedSummary) return;
+
+    const finalSummary: ReviewSummary = {
+      ...generatedSummary,
+      overallAdvice: summaryText || generatedSummary.overallAdvice
+    };
+
+    completeTaskWithSummary(currentTask.id, finalSummary);
     setShowFinishSummary(false);
+    setGeneratedSummary(null);
+
     Taro.showToast({
       title: '审稿完成',
       icon: 'success'
     });
-    console.log('[Review] 确认完成审稿', currentTask.id);
+    console.log('[Review] 确认完成审稿（带总结）', currentTask.id);
   };
 
   const handleCancelFinish = () => {
@@ -220,7 +254,7 @@ const ReviewPage: React.FC = () => {
     );
   }
 
-  const totalPages = currentTask.panelImages.length;
+  const totalPages = currentTask.pageCount;
   const taskComments = comments.filter(c => c.taskId === currentTask.id);
   const taskCommentsCount = taskComments.length;
   const pageCommentsCount = taskComments.filter(c => c.pageIndex === currentPage + 1).length;
@@ -232,45 +266,104 @@ const ReviewPage: React.FC = () => {
   return (
     <View className={styles.page}>
       {showFinishSummary ? (
-        <View className={styles.emptyState} style={{ justifyContent: 'flex-start', paddingTop: 100 }}>
-          <View className={styles.finishSummary}>
-            <Text className={styles.finishTitle}>审稿完成确认</Text>
-            <View style={{ fontSize: 28, color: '#4E5969', marginBottom: 24 }}>
-              {currentTask.title}
+        <View className={styles.emptyState} style={{ justifyContent: 'flex-start', paddingTop: 20, paddingBottom: 40 }}>
+          <ScrollView scrollY style={{ width: '100%', height: '100%' }}>
+            <View className={styles.finishSummary}>
+              <Text className={styles.finishTitle}>审稿交付确认</Text>
+              <View style={{ fontSize: 28, color: '#4E5969', marginBottom: 24 }}>
+                {currentTask.title}
+              </View>
+
+              <View className={styles.finishStats}>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#00B42A' }}>{readCount}/{totalPages}</Text>
+                  <Text className={styles.finishStatLabel}>已读页数</Text>
+                </View>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#7B5CFF' }}>{taskCommentsCount}</Text>
+                  <Text className={styles.finishStatLabel}>总评论数</Text>
+                </View>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#FF7D00' }}>
+                    {generatedSummary ? Math.round(generatedSummary.coverageRatio * 100) : 0}%
+                  </Text>
+                  <Text className={styles.finishStatLabel}>评论覆盖率</Text>
+                </View>
+              </View>
+
+              <View className={styles.finishStats}>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#F53F3F' }}>{summary.urgent}</Text>
+                  <Text className={styles.finishStatLabel}>必须修改</Text>
+                </View>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#FF7D00' }}>{summary.suggest}</Text>
+                  <Text className={styles.finishStatLabel}>建议优化</Text>
+                </View>
+                <View className={styles.finishStat}>
+                  <Text className={styles.finishStatNum} style={{ color: '#86909C' }}>{summary.reference}</Text>
+                  <Text className={styles.finishStatLabel}>仅供参考</Text>
+                </View>
+              </View>
+
+              {generatedSummary && generatedSummary.focusMissed.length > 0 && (
+                <View className={styles.checkSection}>
+                  <Text className={styles.checkTitle}>⚠️ 未覆盖的重点标签</Text>
+                  <View className={styles.checkTags}>
+                    {generatedSummary.focusMissed.map((tag, i) => (
+                      <Text key={i} className={styles.missedTag}>{tag}</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {generatedSummary && generatedSummary.pagesWithoutComments && generatedSummary.pagesWithoutComments.length > 0 && (
+                <View className={styles.checkSection}>
+                  <Text className={styles.checkTitle}>📄 未写评论的页面</Text>
+                  <View className={styles.checkPages}>
+                    {generatedSummary.pagesWithoutComments.slice(0, 10).map((page, i) => (
+                      <Text key={i} className={styles.pageBadge}>第{page}页</Text>
+                    ))}
+                    {generatedSummary.pagesWithoutComments.length > 10 && (
+                      <Text className={styles.pageMore}>+{generatedSummary.pagesWithoutComments.length - 10}页</Text>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {generatedSummary && generatedSummary.priorityPages.length > 0 && (
+                <View className={styles.checkSection}>
+                  <Text className={styles.checkTitle}>🔥 优先修改页</Text>
+                  <View className={styles.checkPages}>
+                    {generatedSummary.priorityPages.slice(0, 6).map((page, i) => (
+                      <Text key={i} className={styles.priorityPageBadge}>第{page}页</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <View className={styles.checkSection}>
+                <Text className={styles.checkTitle}>📝 给作者的整体建议</Text>
+                <View className={styles.summaryTextareaWrap}>
+                  <Text
+                    className={styles.summaryTextarea}
+                    style={{ padding: 0 }}
+                  >
+                    {summaryText}
+                  </Text>
+                </View>
+              </View>
+
+              <View className={styles.finishBtnRow}>
+                <Button className={styles.finishBackBtn} onClick={handleCancelFinish}>
+                  返回继续
+                </Button>
+                <Button className={styles.finishConfirmBtn} onClick={handleConfirmFinish}>
+                  提交交付
+                </Button>
+              </View>
             </View>
-            <View className={styles.finishStats}>
-              <View className={styles.finishStat}>
-                <Text className={styles.finishStatNum} style={{ color: '#00B42A' }}>{readCount}/{totalPages}</Text>
-                <Text className={styles.finishStatLabel}>已读页数</Text>
-              </View>
-              <View className={styles.finishStat}>
-                <Text className={styles.finishStatNum} style={{ color: '#7B5CFF' }}>{taskCommentsCount}</Text>
-                <Text className={styles.finishStatLabel}>总评论数</Text>
-              </View>
-            </View>
-            <View className={styles.finishStats}>
-              <View className={styles.finishStat}>
-                <Text className={styles.finishStatNum} style={{ color: '#F53F3F' }}>{summary.urgent}</Text>
-                <Text className={styles.finishStatLabel}>必须修改</Text>
-              </View>
-              <View className={styles.finishStat}>
-                <Text className={styles.finishStatNum} style={{ color: '#FF7D00' }}>{summary.suggest}</Text>
-                <Text className={styles.finishStatLabel}>建议优化</Text>
-              </View>
-              <View className={styles.finishStat}>
-                <Text className={styles.finishStatNum} style={{ color: '#86909C' }}>{summary.reference}</Text>
-                <Text className={styles.finishStatLabel}>仅供参考</Text>
-              </View>
-            </View>
-            <View className={styles.finishBtnRow}>
-              <Button className={styles.finishBackBtn} onClick={handleCancelFinish}>
-                返回继续
-              </Button>
-              <Button className={styles.finishConfirmBtn} onClick={handleConfirmFinish}>
-                确认完成
-              </Button>
-            </View>
-          </View>
+          </ScrollView>
         </View>
       ) : (
         <>
@@ -280,7 +373,7 @@ const ReviewPage: React.FC = () => {
               <ScrollView scrollY style={{ maxHeight: 400 }}>
                 {inProgressTasks.map(task => {
                   const taskRead = task.progress?.readPages?.length || 0;
-                  const taskTotal = task.panelImages.length;
+                  const taskTotal = task.pageCount;
                   const isActive = task.id === currentTask.id;
                   return (
                     <View
